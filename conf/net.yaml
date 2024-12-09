@@ -1,53 +1,41 @@
 ---
-
-# types of devices: router, switch, host
-
-network:
-  name: "tinynet"
+tinynet:
+  net_name: "tinynet"
+  net_description: "tinynet topology"
   wan_devs:
-    - name: "router_1"
-      type: "router"
-      ip: "203.0.113.1/24"
-      mac: "02:11:22:33:44:55"
-      lan_devs:
-        - name: "switch_1"
-          type: "switch"
-          mac: "01:11:22:33:44:77"
-          ip: "203.0.113.30/24"
-          hosts:
-            - name: "host_11"
-              type: "host"
-              ip: "203.0.113.31/24"
-              mac: "10:44:22:33:44:88"
-            - name: "host_12"
-              type: "host"
-              ip: "203.0.113.31/24"
-              mac: "12:11:47:33:44:94"
-    - name: "router_2"
-      type: "router"
-      ip: "142.1.254.1/23"
-      mac: "00:12:33:33:44:51"
-      lan_devs:
-        - name: "switch_21"
-          type: "switch"
-          ip: "142.1.254.1/24"
-          mac: "06:11:22:33:44:E7"
-          hosts:
-            - name: "host_21"
-              type: "host"
-              ip: "142.1.254.21/24"
-              mac: "07:11:22:33:44:B7"
-        - name: "switch_22"
-          type: "switch"
-          ip: "142.1.255.1/24"
-          mac: "08:11:22:33:44:FA"
-          hosts:
-            - name: "host11"
-              type: "host"
-              ip: "142.1.255.24/24"
-              mac: "09:11:22:33:44:B6"
-            - name: "host11"
-              type: "host"
-              ip: "142.1.255.25/24"
-              mac: "99:11:22:33:44:A2"
-
+    - router_name: "router_1"
+      router_ip: "203.0.113.1/24"
+      router_mac: "02:11:22:33:44:55"
+      router_lan_devs:
+        - switch_name: "switch_11"
+          switch_ip: "203.0.113.30/24"
+          switch_mac: "01:11:22:33:44:77"
+          switch_hosts:
+            - host_name: "host_111"
+              host_ip: "203.0.113.31/24"
+              host_mac: "10:44:22:33:44:88"
+            - host_name: "host_112"
+              host_ip: "203.0.113.31/24"
+              host_mac: "12:11:47:33:44:94"
+    - router_name: "router_2"
+      router_ip: "142.1.254.1/23"
+      router_mac: "00:12:33:33:44:51"
+      router_lan_devs:
+        - switch_name: "switch_21"
+          switch_ip: "142.1.254.1/24"
+          switch_mac: "06:11:22:33:44:E7"
+          switch_hosts:
+            - host_name: "host_211"
+              host_ip: "142.1.254.21/24"
+              host_mac: "07:11:22:33:44:B7"
+        - switch_name: "switch_22"
+          switch_ip: "142.1.255.1/24"
+          switch_mac: "08:11:22:33:44:FA"
+          switch_hosts:
+            - host_name: "host_221"
+              host_ip: "142.1.255.24/24"
+              host_mac: "09:11:22:33:44:B6"
+            - host_name: "host_222"
+              host_ip: "142.1.255.25/24"
+              host_mac: "99:11:22:33:44:A2"
+...

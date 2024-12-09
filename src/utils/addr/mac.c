@@ -3,12 +3,11 @@
 #include <arpa/inet.h>
 
 #include "src/tinynet.h"
-#include "src/utils/mac.h"
 
 int 
-parse_mac_addr(mac_addr_t *mac, const tinynet_char_t *mac_str)
+parse_mac_addr(mac_addr_t *mac, tinynet_char_t *mac_str)
 {
-    unsigned int bytes[6];
+    unsigned int bytes[MAC_ADDRSTRLEN];
     if (sscanf(mac_str, "%x:%x:%x:%x:%x:%x",
                &bytes[0], &bytes[1], &bytes[2],
                &bytes[3], &bytes[4], &bytes[5]) != 6) {
@@ -18,7 +17,7 @@ parse_mac_addr(mac_addr_t *mac, const tinynet_char_t *mac_str)
     for (int i = 0; i < 6; i++) {
         mac->addr[i] = (uint8_t)bytes[i];
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void 

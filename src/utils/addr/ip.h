@@ -4,15 +4,9 @@
 #include <stddef.h>
 #include "src/tinynet.h"
 
-/** Тип IP-адреса. */
-typedef struct ip_addr_s {
-    __uint32_t addr; 
-    __uint8_t mask;  
-} ip_addr_t;
-
 /** Парсинг IP-адреса из строки */
 int  
-parse_ip_addr(ip_addr_t *ip, const tinynet_char_t *ip_str); 
+parse_ip_addr(ip_addr_t *ip, tinynet_char_t *ip_str); 
 
 /** Проверка, находится ли IP-адрес в подсети */
 int 

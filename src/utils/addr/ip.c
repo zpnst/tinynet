@@ -1,11 +1,11 @@
 #include <stdio.h>
+#include <string.h>
 #include <arpa/inet.h>
 
 #include "src/tinynet.h"
-#include "src/utils/ip.h"
 
 int 
-parse_ip_addr(ip_addr_t *ip, const tinynet_char_t *ip_str) 
+parse_ip_addr(ip_addr_t *ip, tinynet_char_t *ip_str) 
 {
     char addr_buf[INET_ADDRSTRLEN] = {0};
     char *slash = strchr(ip_str, '/');
@@ -20,9 +20,9 @@ parse_ip_addr(ip_addr_t *ip, const tinynet_char_t *ip_str)
 
     if (inet_pton(AF_INET, addr_buf, &ip->addr) != 1) {
         fprintf(stderr, "incorrect IP address: %s\n", ip_str);
-        return -1;
+        return EXIT_FAILURE;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int 

@@ -5,34 +5,24 @@
 #include <yaml.h>
 
 #include "src/tinynet.h"
-#include "src/utils/ip.h"
-#include "src/utils/mac.h"
+#include "src/utils/addr/ip.h"
+#include "src/utils/addr/mac.h"
+#include "src/utils/yaml/parser.h"
 
-const char *dot_file = "net.dot";
-const char *yaml_file = "net.yaml";
 
-typedef struct lan_devs_S {
+int 
+main(void) 
+{
 
-} lan_devs_t;
+    const tinynet_char_t *yaml_file = "conf/net.yaml";
 
-typedef struct wan_devs_s {
-    tinynet_char_t *dev_name;
-    tinynet_char_t *dev_type;
-
-    ip_addr_t ip_addr;
-    mac_addr_t mac_addr;
+    tinynet_conf_t *network;
+    int exit_code = parse_yaml(network, yaml_file);
     
-    lan_devs_t *lan_devs_list;
+    if (exit_code != EXIT_SUCCESS) {
+        fprintf(stderr, "Failed to parse YAML file\n");
+        return EXIT_FAILURE;
+    }
 
-} wan_devs_t;
-
-typedef struct network_conf_s {
-    char *dev_name;
-    wan_devs_t *wan_devs_list;      
-} network_conf_t;
-
-
-int main(int argc, char **argv) {
-
-    return 0;
+    return EXIT_SUCCESS;
 }
