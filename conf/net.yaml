@@ -1,0 +1,53 @@
+---
+
+# types of devices: router, switch, host
+
+network:
+  name: "tinynet"
+  wan_devs:
+    - name: "router_1"
+      type: "router"
+      ip: "203.0.113.1/24"
+      mac: "02:11:22:33:44:55"
+      lan_devs:
+        - name: "switch_1"
+          type: "switch"
+          mac: "01:11:22:33:44:77"
+          ip: "203.0.113.30/24"
+          hosts:
+            - name: "host_11"
+              type: "host"
+              ip: "203.0.113.31/24"
+              mac: "10:44:22:33:44:88"
+            - name: "host_12"
+              type: "host"
+              ip: "203.0.113.31/24"
+              mac: "12:11:47:33:44:94"
+    - name: "router_2"
+      type: "router"
+      ip: "142.1.254.1/23"
+      mac: "00:12:33:33:44:51"
+      lan_devs:
+        - name: "switch_21"
+          type: "switch"
+          ip: "142.1.254.1/24"
+          mac: "06:11:22:33:44:E7"
+          hosts:
+            - name: "host_21"
+              type: "host"
+              ip: "142.1.254.21/24"
+              mac: "07:11:22:33:44:B7"
+        - name: "switch_22"
+          type: "switch"
+          ip: "142.1.255.1/24"
+          mac: "08:11:22:33:44:FA"
+          hosts:
+            - name: "host11"
+              type: "host"
+              ip: "142.1.255.24/24"
+              mac: "09:11:22:33:44:B6"
+            - name: "host11"
+              type: "host"
+              ip: "142.1.255.25/24"
+              mac: "99:11:22:33:44:A2"
+
