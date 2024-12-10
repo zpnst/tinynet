@@ -1,5 +1,6 @@
 #include <yaml.h>
 
+#include "src/sys.h"
 #include "src/tinynet.h"
 
 #include "src/fsm/parser.h"
@@ -11,115 +12,11 @@
 static void 
 error_message(machine_states_t expected, machine_states_t received) 
 {
-    fprintf(stderr, "[ERR] Yaml tinynet structure error\n[ERR] Expected state %d, received state %d.\n[ERR] Here is template:\n[ERR]     dev_name: 'name'\n[ERR]     dev_ip: 'ip'\n[ERR]     dev_mac: 'mac'", expected, received);
+    fprintf(stderr, "[ERR] Yaml tinynet structure error\n[ERR] Expected state %d, received state %d.\
+    \n[ERR] Here is template:\n[ERR]     dev_name: 'name'\n[ERR]     dev_ip: 'ip'\n[ERR]     dev_mac: 'mac'", expected, received);
 }
 
-int
-parse_yaml(tinynet_conf_t **net_conf, const tinynet_char_t *yaml_filename)
-{
-
-    FILE *yamlf = fopen(yaml_filename, "r");
-    if (!yamlf) {
-        perror("yamlf fopen");
-        return 1;
-    }
-
-    parser_state_t state;
-    yaml_parser_t parser;
-    machine_states_t status;
-
-    machine_states_t expected_state = STATE_START;
-
-    memset(&state, 0, sizeof(state));
-    state.state = STATE_START;
-
-    yaml_parser_initialize(&parser);
-    yaml_parser_set_input_file(&parser, yamlf);
-
-    do {
-        yaml_event_t event;
-
-        status = yaml_parser_parse(&parser, &event);
-
-        if (status == FAILURE) {
-            fprintf(stderr, "[ERR] yaml_parser_parse error\n");
-
-            destroy_wans_list(state.wans_list);
-            destroy_state(&state);
-            
-            yaml_parser_delete(&parser);
-            fclose(yamlf);
-            return EXIT_FAILURE;
-        }
-
-        status = handle_event(&state, &event, &expected_state);
-        yaml_event_delete(&event);
-
-        if (status == FAILURE) {
-            fprintf(stderr, "[ERR] handle_event error\n");
-
-            destroy_wans_list(state.wans_list);
-            destroy_state(&state);
-
-            yaml_parser_delete(&parser);
-            fclose(yamlf);
-            return EXIT_FAILURE;
-            
-        }
-    } while (state.state != STATE_STOP);
-
-    /* Output the parsed data. */
-
-
-    *net_conf = (tinynet_conf_t *)panic_alloc(sizeof(tinynet_conf_t));
-    (*net_conf)->net_name = state.net_conf_name;
-    (*net_conf)->net_description = state.net_conf_description;
-    (*net_conf)->devs = state.wans_list;
-
-    destroy_state(&state);
-    yaml_parser_delete(&parser);
-    fclose(yamlf);
-    
-    return EXIT_SUCCESS;
-}
-
-void 
-dump_net_conf(tinynet_conf_t *net_conf) 
-{   
-    tinynet_char_t ip_buffer[IP_BUFFER_S];
-    tinynet_char_t mac_buffer[MAC_BUFFER_S];
-    tinynet_char_t dev_type_buffer[DEVICE_T_BUFFER_S];
-
-    printf("[NET] name: '%s'\n[NET] description: '%s'\n\n", net_conf->net_name, net_conf->net_description);
-    for (abs_dev_t *w = net_conf->devs; w; w = w->next) {
-        
-        ip_addr_to_string(&w->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-        mac_addr_to_string(&w->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-        handle_device_type(w->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-        printf("[ROUT] name=%s, type=%s, ip=%s, mac=%s\n", w->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
-
-        for (abs_dev_t *l = w->lower_devs_list; l; l = l->next) {
-            
-            ip_addr_to_string(&l->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-            mac_addr_to_string(&l->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-            handle_device_type(l->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-            printf("[SWIT]     name=%s, type=%s, ip=%s, mac=%s\n", l->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
-
-            for (abs_dev_t *h = l->lower_devs_list; h; h = h->next) {
-                
-                ip_addr_to_string(&h->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-                mac_addr_to_string(&h->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-                handle_device_type(h->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-                printf("[HOST]         name=%s, type=%s, ip=%s, mac=%s\n",h->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
-            }
-        }
-    }
-}
-
-int
+static int
 handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_state)
 {
     tinynet_char_t *value;
@@ -717,3 +614,73 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
     }
     return SUCCESS;
 }
+
+int
+parse_yaml(tinynet_conf_t **net_conf, const tinynet_char_t *yaml_filename)
+{
+
+    FILE *yamlf = fopen(yaml_filename, "r");
+    if (!yamlf) {
+        perror("yamlf fopen");
+        return 1;
+    }
+
+    parser_state_t state;
+    yaml_parser_t parser;
+    machine_states_t status;
+
+    machine_states_t expected_state = STATE_START;
+
+    memset(&state, 0, sizeof(state));
+    state.state = STATE_START;
+
+    yaml_parser_initialize(&parser);
+    yaml_parser_set_input_file(&parser, yamlf);
+
+    do {
+        yaml_event_t event;
+
+        status = yaml_parser_parse(&parser, &event);
+
+        if (status == FAILURE) {
+            fprintf(stderr, "[ERR] yaml_parser_parse error\n");
+
+            destroy_wans_list(state.wans_list);
+            destroy_state(&state);
+            
+            yaml_parser_delete(&parser);
+            fclose(yamlf);
+            return EXIT_FAILURE;
+        }
+
+        status = handle_event(&state, &event, &expected_state);
+        yaml_event_delete(&event);
+
+        if (status == FAILURE) {
+            fprintf(stderr, "[ERR] handle_event error\n");
+
+            destroy_wans_list(state.wans_list);
+            destroy_state(&state);
+
+            yaml_parser_delete(&parser);
+            fclose(yamlf);
+            return EXIT_FAILURE;
+            
+        }
+    } while (state.state != STATE_STOP);
+
+    /* Output the parsed data. */
+
+
+    *net_conf = (tinynet_conf_t *)panic_alloc(sizeof(tinynet_conf_t));
+    (*net_conf)->net_name = state.net_conf_name;
+    (*net_conf)->net_description = state.net_conf_description;
+    (*net_conf)->devs = state.wans_list;
+
+    destroy_state(&state);
+    yaml_parser_delete(&parser);
+    fclose(yamlf);
+    
+    return EXIT_SUCCESS;
+}
+

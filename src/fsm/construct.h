@@ -12,9 +12,6 @@ panic_alloc(size_t size);
 tinynet_char_t *
 panic_strdup(tinynet_char_t *s);
 
-void 
-handle_device_type(device_e device_type, tinynet_char_t *buffer, size_t len);
-
 void
 add_router(abs_dev_t **routers, device_e router_type, dev_basic_info_t router_binf, abs_dev_t *lans_list);
 

@@ -2,49 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/sys.h"
 #include "src/tinynet.h"
 #include "src/fsm/construct.h"
-
-void
-panic(tinynet_char_t *message)
-{
-    fprintf(stderr, "%s\n", message);
-    exit(1);
-}
-
-void *
-panic_alloc(size_t size)
-{
-    void *new_prt = calloc(1, size);
-    if (!new_prt) {
-        panic("out of memory");
-    }
-    return new_prt;
-}
-
-tinynet_char_t *
-panic_strdup(tinynet_char_t *string)
-{
-    tinynet_char_t *new_char = strdup(string ? string : "");
-    if (!new_char) {
-        panic("out of memory");
-    }
-    return new_char;
-}
-
-void 
-handle_device_type(device_e device_type, tinynet_char_t *buffer, size_t len) 
-{
-    if (device_type == ROUTER_T) {
-        snprintf(buffer, len, "<rout>");
-    } else if (device_type == SWITCH_T) {
-        snprintf(buffer, len, "<swit>");
-    } else if (device_type == HOST_T) {
-        snprintf(buffer, len, "<host>");
-    } else {
-        panic("wrong device type");
-    }
-} 
 
 void
 add_router(abs_dev_t **routers, device_e router_type, dev_basic_info_t router_binf, abs_dev_t *lans_list)

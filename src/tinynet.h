@@ -7,6 +7,12 @@
 
 #define YAML_DOC_TITLE "tinynet"
 
+#define SHOW_IP 1
+#define DONT_SHOW_IP 0
+
+#define SHOW_MAC 1
+#define DONT_SHOW_MAC 0
+
 /** Длина MAC-адреса. */
 #define MAC_ADDRSTRLEN 6
 

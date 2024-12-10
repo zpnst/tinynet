@@ -1,7 +1,7 @@
 ---
 tinynet:
   net_name: "tinynet"
-  net_description: "tinynet topology"
+  net_description: "example net_description for net_name tinynet"
   wan_devs:
     - router_name: "router_1"
       router_ip: "203.0.113.1/24"
@@ -45,6 +45,9 @@ tinynet:
               host_ip: "142.1.255.45/24"
               host_mac: "BF:11:22:33:44:12"
     - router_name: "router_3"
+      router_ip: "203.0.113.1/24"
+      router_mac: "02:11:22:33:44:55"
+    - router_name: "router_4"
       router_ip: "203.0.113.1/24"
       router_mac: "02:11:22:33:44:55"
 ...

@@ -1,0 +1,33 @@
+graph tinynet {
+    label="tinynet topology\nexample net_description for net_name tinynet";
+    labelloc=top;
+    fontsize=12;
+    node [fontsize=10];
+    "router_1" [shape=diamond, label="router_1\n203.0.113.1/24\n02:11:22:33:44:55", color=purple];
+    "switch_11" [shape=ellipse, label="switch_11\n203.0.113.30/24\n01:11:22:33:44:77", color=blue];
+    "host_111" [shape=box, label="host_111\n203.0.113.31/24\n10:44:22:33:44:88", color=black];
+    "switch_11" -- "host_111";
+    "host_112" [shape=box, label="host_112\n203.0.113.31/24\n12:11:47:33:44:94", color=black];
+    "switch_11" -- "host_112";
+    "router_1" -- "switch_11";
+    "router_2" [shape=diamond, label="router_2\n142.1.254.1/23\n00:12:33:33:44:51", color=purple];
+    "switch_21" [shape=ellipse, label="switch_21\n142.1.254.1/24\n06:11:22:33:44:e7", color=blue];
+    "host_211" [shape=box, label="host_211\n142.1.254.21/24\n07:11:22:33:44:b7", color=black];
+    "switch_21" -- "host_211";
+    "router_2" -- "switch_21";
+    "switch_22" [shape=ellipse, label="switch_22\n142.1.255.1/24\n08:11:22:33:44:fa", color=blue];
+    "host_221" [shape=box, label="host_221\n142.1.255.24/24\n09:11:22:33:44:b6", color=black];
+    "switch_22" -- "host_221";
+    "host_222" [shape=box, label="host_222\n142.1.255.25/24\n99:11:22:33:44:a2", color=black];
+    "switch_22" -- "host_222";
+    "host_223" [shape=box, label="host_223\n142.1.255.44/24\naf:11:22:33:44:16", color=black];
+    "switch_22" -- "host_223";
+    "host_224" [shape=box, label="host_224\n142.1.255.45/24\nbf:11:22:33:44:12", color=black];
+    "switch_22" -- "host_224";
+    "router_2" -- "switch_22";
+    "router_1" -- "router_2";
+    "router_3" [shape=diamond, label="router_3\n203.0.113.1/24\n02:11:22:33:44:55", color=purple];
+    "router_2" -- "router_3";
+    "router_4" [shape=diamond, label="router_4\n203.0.113.1/24\n02:11:22:33:44:55", color=purple];
+    "router_3" -- "router_4";
+}

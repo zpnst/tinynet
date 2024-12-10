@@ -5,9 +5,13 @@
 #include <yaml.h>
 
 #include "src/tinynet.h"
+
 #include "src/fsm/parser.h"
 
+#include "src/viz/viz.h"
+
 const tinynet_char_t *yaml_file = "conf/net.yaml";
+const tinynet_char_t *dot_file = "conf/data/net.dot";
 
 int 
 main(void) 
@@ -21,6 +25,8 @@ main(void)
     }
 
     dump_net_conf(network);
+
+    write_dot_file(network, dot_file, SHOW_IP, SHOW_MAC);
     destroy_net_conf(network);
 
     return EXIT_SUCCESS;
