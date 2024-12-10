@@ -1,11 +1,12 @@
 #include <yaml.h>
 
 #include "src/tinynet.h"
+
 #include "src/fsm/parser.h"
 #include "src/fsm/construct.h"
 
-#include "src/utils/addr/ip.h"
-#include "src/utils/addr/mac.h"
+#include "src/net/addr/ip.h"
+#include "src/net/addr/mac.h"
 
 static void 
 error_message(machine_states_t expected, machine_states_t received) 

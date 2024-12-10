@@ -1,20 +1,22 @@
 BIN_DIR = bin
 SRC_DIR = src
 
-FSM_DIR = $(SRC_DIR)/fsm
-UTILS_DIR = $(SRC_DIR)/utils
-DEVICES_DIR = $(SRC_DIR)/devices
-NETMAN_DIR = $(SRC_DIR)/netman
+FSM_DIR = $(SRC_DIR)/fsm/
+NET_DIR = $(SRC_DIR)/net/
+
+DEVICES_DIR = $(NET_DIR)/devices/
+NETMAN_DIR = $(NET_DIR)/netman/
+ADDR_DIR = $(NET_DIR)/addr/
 
 YAML_DYNLIB = yaml
 
 TARGET = tinynet
 DEBUG_TARGET = debug_tinynet
 
-SRCS = $(wildcard $(FSM_DIR)/*.c) \
-	   $(wildcard $(NETMAN_DIR)/*.c) \
-	   $(wildcard $(DEVICES_DIR)/*.c) \
-	   $(wildcard $(UTILS_DIR)/addr/*.c) $(wildcard $(UTILS_DIR)/visualize/*.c) \
+SRCS = $(wildcard $(FSM_DIR)*.c) \
+	   $(wildcard $(DEVICES_DIR)*.c) \
+	   $(wildcard $(NETMAN_DIR)*.c) \
+	   $(wildcard $(ADDR_DIR)*.c) \
        main.c
 
 CC = clang
