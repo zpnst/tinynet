@@ -27,3 +27,12 @@ mac_addr_to_string(mac_addr_t *mac, tinynet_char_t *buffer, size_t len)
              mac->addr[0], mac->addr[1], mac->addr[2],
              mac->addr[3], mac->addr[4], mac->addr[5]);
 }
+
+int
+is_mac_exists(mac_addr_t *mac) 
+{
+    if (!mac->addr[0] && !mac->addr[1] && !mac->addr[2] && !mac->addr[3] && !mac->addr[4] && !mac->addr[5]) {
+        return 0;
+    }
+    return 1;
+}

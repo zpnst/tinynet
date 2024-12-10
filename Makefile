@@ -1,5 +1,7 @@
 BIN_DIR = bin
 SRC_DIR = src
+
+FSM_DIR = $(SRC_DIR)/fsm
 UTILS_DIR = $(SRC_DIR)/utils
 DEVICES_DIR = $(SRC_DIR)/devices
 NETMAN_DIR = $(SRC_DIR)/netman
@@ -9,13 +11,14 @@ YAML_DYNLIB = yaml
 TARGET = tinynet
 DEBUG_TARGET = debug_tinynet
 
-SRCS = $(wildcard $(NETMAN_DIR)/*.c) \
+SRCS = $(wildcard $(FSM_DIR)/*.c) \
+	   $(wildcard $(NETMAN_DIR)/*.c) \
 	   $(wildcard $(DEVICES_DIR)/*.c) \
-	   $(wildcard $(UTILS_DIR)/addr/*.c) $(wildcard $(UTILS_DIR)/yaml/*.c) $(wildcard $(UTILS_DIR)/visualize/*.c) \
+	   $(wildcard $(UTILS_DIR)/addr/*.c) $(wildcard $(UTILS_DIR)/visualize/*.c) \
        main.c
 
 CC = clang
-CFLAGS = -Wall -Wextra -I.
+CFLAGS = -Wall -Wextra -Wno-switch -I.
 DEBUG_FLAGS = -g3 -ggdb
 LDFLAGS = -l$(YAML_DYNLIB)
 
