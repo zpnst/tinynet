@@ -20,7 +20,7 @@ main(void)
     int exit_code = parse_yaml(&network, yaml_file);
 
     if (exit_code != EXIT_SUCCESS) {
-        fprintf(stderr, "[ERR] Failed to parse YAML file\n");
+        LOG_ERROR_PREFIX("Failed to parse YAML file\n");
         return EXIT_FAILURE;
     }
 

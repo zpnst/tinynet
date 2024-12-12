@@ -18,13 +18,43 @@
 
 #define IP_BUFFER_S 19
 #define MAC_BUFFER_S 18
+
+#define NET_T_BUFFER_S 5
 #define DEVICE_T_BUFFER_S 7
+
+
+void 
+log_msg_prefix(const char *msg_prefix, const char *color, const char *format, ...);
+
+/** ANSI COLORS */
+#define ANSI_COLOR_RED       "\x1b[31m"
+#define ANSI_COLOR_GRAY      "\x1b[37m"
+#define ANSI_COLOR_GREEN     "\x1b[32m"
+#define ANSI_COLOR_BLUE      "\x1b[34m"
+#define ANSI_COLOR_PURPLE    "\x1b[35m"
+#define ANSI_COLOR_RESET     "\x1b[0m"
+
+#define COLORFY_BLUE(string) ANSI_COLOR_BLUE string ANSI_COLOR_RESET
+#define COLORFY_GRAY(string) ANSI_COLOR_GRAY string ANSI_COLOR_RESET
+#define COLORFY_GREEN(string) ANSI_COLOR_GREEN string ANSI_COLOR_RESET
+#define COLORFY_PURPLE(string) ANSI_COLOR_PURPLE string ANSI_COLOR_RESET
+
+#define LOG_PANIC_PREFIX(format, ...) log_msg_prefix("PANIC", ANSI_COLOR_RED, format, ##__VA_ARGS__)
+#define LOG_ERROR_PREFIX(format, ...) log_msg_prefix("ERR", ANSI_COLOR_RED, format, ##__VA_ARGS__)
+#define LOG_WARNING_PREFIX(format, ...) log_msg_prefix("WARN", ANSI_COLOR_PURPLE, format, ##__VA_ARGS__)
 
 typedef enum device_t {
     ROUTER_T,
     SWITCH_T,
     HOST_T,
 } device_e;
+
+typedef enum net_types_s {
+    MESH_NET_T,
+    RING_NET_T,
+    BUS_NET_T,
+} net_types_e;
+
 
 // types
 
@@ -70,12 +100,12 @@ typedef struct abs_dev_s {
 
 /** Тип сетевой топологии. */
 typedef struct tinynet_conf_s {
+    net_types_e net_type;
     tinynet_char_t *net_name;
     tinynet_char_t *net_description;
 
     abs_dev_t *devs;
 } tinynet_conf_t;
-
 
 typedef enum machine_status_e {
     SUCCESS = 1,
@@ -95,35 +125,36 @@ typedef enum machine_states_e {
     /** Network metadata states */ 
     STATE_NETVALUES,
     STATE_NETKEYS,
-    STATE_NETNAME,   // 6
-    STATE_NETDESCRIPTION,  // 7
-    STATE_WANLIST,  // 8
+    STATE_NETTYPE,
+    STATE_NETNAME,   
+    STATE_NETDESCRIPTION,  
+    STATE_WANLIST, 
 
     /** Routers states */
-    STATE_WANVALUES,  // 9
-    STATE_WANKEYS,  // 10
+    STATE_WANVALUES,  
+    STATE_WANKEYS,  
 
-    STATE_ROUTERNAME,  // 11
-    STATE_ROUTERIP,  // 12
-    STATE_ROUTERMAC,  // 13
-    STATE_LANLIST,  // 14
+    STATE_ROUTERNAME,  
+    STATE_ROUTERIP, 
+    STATE_ROUTERMAC, 
+    STATE_LANLIST,  
  
     /** Switches states */
-    STATE_LANVALUES,  // 15
-    STATE_LANKEYS,  // 16
+    STATE_LANVALUES,  
+    STATE_LANKEYS, 
 
-    STATE_SWITCHNAME,  // 17
-    STATE_SWITCHIP, // 18
-    STATE_SWITCHMAC, // 19
-    STATE_HOSTSLIST, // 20
+    STATE_SWITCHNAME, 
+    STATE_SWITCHIP,
+    STATE_SWITCHMAC, 
+    STATE_HOSTSLIST,
 
     /** Host states */
-    STATE_HOSTVALUES, // 21
-    STATE_HOSTKEYS, // 22
+    STATE_HOSTVALUES, 
+    STATE_HOSTKEYS, 
 
-    STATE_HOSTNAME, // 23
-    STATE_HOSTIP, // 24
-    STATE_HOSTMAC, // 25
+    STATE_HOSTNAME,
+    STATE_HOSTIP,
+    STATE_HOSTMAC,
 
     /** End state */
     STATE_STOP     
@@ -131,17 +162,18 @@ typedef enum machine_states_e {
 
 /** parser state. */
 typedef struct parser_state_s {
-    machine_states_t state;                         /** The current parse state */
+    machine_states_t state;                   /** The current parse state */
 
     dev_basic_info_t host;                    /** Host buffer. */
-    dev_basic_info_t switch_;                     /** LAN(switch) buffer. */
-    dev_basic_info_t router;                     /** WAN(router) buffer. */
+    dev_basic_info_t switch_;                 /** LAN(switch) buffer. */
+    dev_basic_info_t router;                  /** WAN(router) buffer. */
 
     abs_dev_t *host_list;                     /** Temporary buffer for each LAN. */
     abs_dev_t *lans_list;                     /** Temporary buffer for each WAN. */
 
     abs_dev_t *wans_list;                     /** Master list of WANs. */
 
+    net_types_e net_conf_type;               /** Master network configuration type. */
     tinynet_char_t *net_conf_name;           /** Master network configuration name. */
     tinynet_char_t *net_conf_description;    /** Master network configuration description. */
 } parser_state_t;

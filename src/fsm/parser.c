@@ -12,8 +12,12 @@
 static void 
 error_message(machine_states_t expected, machine_states_t received) 
 {
-    fprintf(stderr, "[ERR] Yaml tinynet structure error\n[ERR] Expected state %d, received state %d.\
-    \n[ERR] Here is template:\n[ERR]     dev_name: 'name'\n[ERR]     dev_ip: 'ip'\n[ERR]     dev_mac: 'mac'", expected, received);
+    LOG_ERROR_PREFIX("Yaml tinynet structure error\n");
+    LOG_ERROR_PREFIX("Expected state %d, received state %d.\n", expected, received);
+    LOG_ERROR_PREFIX("Here is dev template:\n");
+    LOG_ERROR_PREFIX("    dev_name: 'name'\n");
+    LOG_ERROR_PREFIX("    dev_ip: 'ip'\n");
+    LOG_ERROR_PREFIX("    dev_mac: 'mac'\n");
 }
 
 static int
@@ -35,7 +39,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_STREAM;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -49,7 +53,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_STOP;  /* All done. */
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -63,7 +67,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_STREAM;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -75,7 +79,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             if (strcmp(value, "tinynet") == 0) {
                s->state = STATE_NETVALUES;
             } else {
-               fprintf(stderr, "Unexpected yaml doc title: %s, must be: '%s'\n", value, YAML_DOC_TITLE);
+               LOG_ERROR_PREFIX("Unexpected yaml doc title: %s, must be: '%s'\n", value, YAML_DOC_TITLE);
                return FAILURE;
             }
             break;
@@ -85,7 +89,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_STREAM;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -95,11 +99,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
     case STATE_NETVALUES:
         switch (event->type) {
         case YAML_MAPPING_START_EVENT:
-            *expected_state = STATE_NETNAME;
+            *expected_state = STATE_NETTYPE;
             s->state = STATE_NETKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d, you must provide 'net_name' and 'net_description' to tinynet section\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d, you must provide 'net_name' and 'net_description' to tinynet section\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -108,14 +112,16 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             value = (char *)event->data.scalar.value;
-            if (strcmp(value, "net_name") == 0) {
+            if (strcmp(value, "net_type") == 0) {
+                s->state = STATE_NETTYPE;
+            } else if (strcmp(value, "net_name") == 0) {
                 s->state = STATE_NETNAME;
             } else if (strcmp(value, "net_description") == 0) {
                 s->state = STATE_NETDESCRIPTION;
             } else if (strcmp(value, "wan_devs") == 0) { /** Change parsing level*/
                 s->state = STATE_WANLIST;
             } else {
-                fprintf(stderr, "Unexpected key: %s\n", value);
+                LOG_ERROR_PREFIX("Unexpected key: %s\n", value);
                 return FAILURE;
             }
             break;
@@ -123,7 +129,38 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_SECTION;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
+            return FAILURE;
+        }
+        break;
+
+    case STATE_NETTYPE:
+        if (s->state != *expected_state) {
+            error_message(*expected_state, s->state);
+            return FAILURE;
+        }
+        switch (event->type) {
+        case YAML_SCALAR_EVENT:
+            if (s->net_conf_type) {
+                LOG_WARNING_PREFIX("Warning: duplicate 'net_type' key.\n");
+            }
+
+            tinynet_char_t *string_net_type = panic_strdup((tinynet_char_t *)event->data.scalar.value);
+            if (strcmp(string_net_type, "mesh") == 0) {
+                s->net_conf_type = MESH_NET_T;
+            } else if (strcmp(string_net_type, "ring") == 0) {
+                s->net_conf_type = RING_NET_T;
+            } else if (strcmp(string_net_type, "bus") == 0) {
+                s->net_conf_type = BUS_NET_T;
+            } else {
+                LOG_ERROR_PREFIX("Unexpected device type, must be 'mesh', 'ring' or 'bus'\n");
+                return FAILURE;
+            }
+            *expected_state = STATE_NETNAME;
+            s->state = STATE_NETKEYS;
+            break;
+        default:
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -136,7 +173,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->net_conf_name) {
-                fprintf(stderr, "Warning: duplicate 'net_name' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'net_name' key.\n");
                 free(s->net_conf_name);
             }
             s->net_conf_name = panic_strdup((tinynet_char_t *)event->data.scalar.value);
@@ -144,7 +181,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_NETKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -157,7 +194,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->net_conf_description) {
-                fprintf(stderr, "Warning: duplicate 'net_description' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'net_description' key.\n");
                 free(s->net_conf_description);
             }
             s->net_conf_description = panic_strdup((tinynet_char_t *)event->data.scalar.value);
@@ -165,7 +202,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_NETKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -180,7 +217,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_WANVALUES;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -195,7 +232,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_NETKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -215,14 +252,14 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             } else if (strcmp(value, "router_lan_devs") == 0) { /** Change parsing level*/
                 s->state = STATE_LANLIST;
             } else {
-                fprintf(stderr, "Unexpected key: %s\n", value);
+                LOG_ERROR_PREFIX("Unexpected key: %s\n", value);
                 return FAILURE;
             }
             break;
         case YAML_MAPPING_END_EVENT:
 
             if (!(s->router.ip_addr.addr) || !is_mac_exists(&s->router.mac_addr)) {
-                fprintf(stderr, "[ERR] %s don't have an IP address or a MAC address\n", s->router.dev_name);
+                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->router.dev_name);
                 return FAILURE;
             }
 
@@ -241,7 +278,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
 
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -254,7 +291,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->router.dev_name) {
-                fprintf(stderr, "Warning: duplicate 'router_name' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'router_name' key.\n");
                 free(s->router.dev_name);
             }
             s->router.dev_name = panic_strdup((tinynet_char_t *)event->data.scalar.value);
@@ -262,7 +299,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_WANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -275,11 +312,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->router.ip_addr.addr) {
-                fprintf(stderr, "Warning: duplicate 'router_ip' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'router_ip' key.\n");
             }
             tinynet_char_t *ip_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_ip_addr(&s->router.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect IP address: %s.\n", ip_addr_str);
+                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
                 return FAILURE;
             }
             free(ip_addr_str);
@@ -287,7 +324,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_WANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -300,11 +337,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->router.mac_addr.addr[0]) {
-                fprintf(stderr, "Warning: duplicate 'router_mac' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'router_mac' key.\n");
             }
             tinynet_char_t *mac_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_mac_addr(&s->router.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect MAC address: %s.\n", mac_addr_str);
+                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
                 return FAILURE;
             }
             free(mac_addr_str);
@@ -312,7 +349,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_WANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -329,7 +366,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_LANVALUES;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -344,7 +381,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_WANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -362,7 +399,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             } else if (strcmp(value, "switch_hosts") == 0) { /** Change parsing level*/
                 s->state = STATE_HOSTSLIST;
             } else {
-                fprintf(stderr, "Unexpected key: %s\n", value);
+                LOG_ERROR_PREFIX("Unexpected key: %s\n", value);
                 return FAILURE;
             }
             break;
@@ -370,7 +407,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
 
 
             if (!(s->switch_.ip_addr.addr) || !is_mac_exists(&s->switch_.mac_addr)) {
-                fprintf(stderr, "[ERR] %s don't have an IP address or a MAC address\n", s->switch_.dev_name);
+                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->switch_.dev_name);
                 return FAILURE;
             }
 
@@ -389,7 +426,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
 
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -404,7 +441,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->switch_.dev_name) {
-                fprintf(stderr, "Warning: duplicate 'switch_name' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'switch_name' key.\n");
                 free(s->switch_.dev_name);
             }
             s->switch_.dev_name = panic_strdup((tinynet_char_t *)event->data.scalar.value);
@@ -412,7 +449,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_LANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -425,11 +462,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->switch_.ip_addr.addr) {
-                fprintf(stderr, "Warning: duplicate 'switch_ip' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'switch_ip' key.\n");
             }
             tinynet_char_t *ip_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_ip_addr(&s->switch_.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect IP address: %s.\n", ip_addr_str);
+                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
                 return FAILURE;
             }
             free(ip_addr_str);
@@ -437,7 +474,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_LANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -450,11 +487,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->switch_.mac_addr.addr[0]) {
-                fprintf(stderr, "Warning: duplicate 'switch_mac' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'switch_mac' key.\n");
             }
             tinynet_char_t *mac_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_mac_addr(&s->switch_.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect MAC address: %s.\n", mac_addr_str);
+                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
                 return FAILURE;
             }
             free(mac_addr_str);
@@ -462,7 +499,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_LANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -477,7 +514,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_HOSTVALUES;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -494,7 +531,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_LANKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -510,14 +547,14 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             } else if (strcmp(value, "host_mac") == 0) {
                 s->state = STATE_HOSTMAC;
             } else {
-                fprintf(stderr, "Unexpected key: %s\n", value);
+                LOG_ERROR_PREFIX("Unexpected key: %s\n", value);
                 return FAILURE;
             }
             break;
         case YAML_MAPPING_END_EVENT:
 
             if (!(s->host.ip_addr.addr) || !is_mac_exists(&s->host.mac_addr)) {
-                fprintf(stderr, "[ERR] %s don't have an IP address or a MAC address\n", s->host.dev_name);
+                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->host.dev_name);
                 return FAILURE;
             }
 
@@ -534,7 +571,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_HOSTVALUES;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -547,7 +584,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->host.dev_name) {
-                fprintf(stderr, "Warning: duplicate 'host_name' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'host_name' key.\n");
                 free(s->host.dev_name);
             }
             s->host.dev_name = panic_strdup((tinynet_char_t *)event->data.scalar.value);
@@ -555,7 +592,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_HOSTKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -568,11 +605,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->host.ip_addr.addr) {
-                fprintf(stderr, "Warning: duplicate 'host_ip' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'host_ip' key.\n");
             }
             tinynet_char_t *ip_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_ip_addr(&s->host.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect IP address: %s.\n", ip_addr_str);
+                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
                 return FAILURE;
             }
             free(ip_addr_str);
@@ -580,7 +617,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             s->state = STATE_HOSTKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -593,18 +630,18 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         switch (event->type) {
         case YAML_SCALAR_EVENT:
             if (s->host.mac_addr.addr[0]) {
-                fprintf(stderr, "Warning: duplicate 'host_mac' key.\n");
+                LOG_WARNING_PREFIX("duplicate 'host_mac' key.\n");
             }
             tinynet_char_t *mac_addr_str = panic_strdup((tinynet_char_t *)event->data.scalar.value);
             if (parse_mac_addr(&s->host.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                fprintf(stderr, "Incorrect MAC address: %s.\n", mac_addr_str);
+                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
                 return FAILURE;
             }
             free(mac_addr_str);
             s->state = STATE_HOSTKEYS;
             break;
         default:
-            fprintf(stderr, "Unexpected event %d in state %d.\n", event->type, s->state);
+            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
             return FAILURE;
         }
         break;
@@ -643,7 +680,7 @@ parse_yaml(tinynet_conf_t **net_conf, const tinynet_char_t *yaml_filename)
         status = yaml_parser_parse(&parser, &event);
 
         if (status == FAILURE) {
-            fprintf(stderr, "[ERR] yaml_parser_parse error\n");
+            
 
             destroy_wans_list(state.wans_list);
             destroy_state(&state);
@@ -657,7 +694,7 @@ parse_yaml(tinynet_conf_t **net_conf, const tinynet_char_t *yaml_filename)
         yaml_event_delete(&event);
 
         if (status == FAILURE) {
-            fprintf(stderr, "[ERR] handle_event error\n");
+            LOG_ERROR_PREFIX("handle_event error\n");
 
             destroy_wans_list(state.wans_list);
             destroy_state(&state);
@@ -675,6 +712,7 @@ parse_yaml(tinynet_conf_t **net_conf, const tinynet_char_t *yaml_filename)
     *net_conf = (tinynet_conf_t *)panic_alloc(sizeof(tinynet_conf_t));
     (*net_conf)->net_name = state.net_conf_name;
     (*net_conf)->net_description = state.net_conf_description;
+    (*net_conf)->net_type =  state.net_conf_type;
     (*net_conf)->devs = state.wans_list;
 
     destroy_state(&state);

@@ -6,7 +6,7 @@
 void
 panic(tinynet_char_t *message)
 {
-    fprintf(stderr, "[PANIC] %s\n", message);
+    LOG_PANIC_PREFIX(message);
     exit(1);
 }
 
