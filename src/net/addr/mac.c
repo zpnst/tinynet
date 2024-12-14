@@ -5,7 +5,7 @@
 #include "src/tinynet.h"
 
 int 
-parse_mac_addr(mac_addr_t *mac, tinynet_char_t *mac_str)
+parse_mac_addr(mac_addr_t *mac, char *mac_str)
 {
     unsigned int bytes[MAC_ADDRSTRLEN];
     if (sscanf(mac_str, "%x:%x:%x:%x:%x:%x",
@@ -21,7 +21,7 @@ parse_mac_addr(mac_addr_t *mac, tinynet_char_t *mac_str)
 }
 
 void 
-mac_addr_to_string(mac_addr_t *mac, tinynet_char_t *buffer, size_t len) 
+mac_addr_to_string(mac_addr_t *mac, char *buffer, size_t len) 
 {
     snprintf(buffer, len, "%02x:%02x:%02x:%02x:%02x:%02x",
              mac->addr[0], mac->addr[1], mac->addr[2],

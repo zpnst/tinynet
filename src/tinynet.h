@@ -22,7 +22,6 @@
 #define NET_T_BUFFER_S 5
 #define DEVICE_T_BUFFER_S 7
 
-
 void 
 log_msg_prefix(const char *msg_prefix, const char *color, const char *format, ...);
 
@@ -55,16 +54,6 @@ typedef enum net_types_s {
     BUS_NET_T,
 } net_types_e;
 
-
-// types
-
-/** Тип беззнакового символа (UTF-8 octet). */
-typedef char tinynet_char_t;
-
-/** Тип символа (UTF-8 octet). */
-typedef unsigned char tinynet_uchar_t;
-
-
 // utils
 
 /** Тип IP-адреса. */
@@ -78,13 +67,12 @@ typedef struct mac_addr_s {
     __uint8_t addr[MAC_ADDRSTRLEN]; 
 } mac_addr_t;
 
-
 // devices
 
 /** Базовая инфоомация об устройсте. */
 typedef struct dev_basic_info_s {
     device_e dev_type;
-    tinynet_char_t *dev_name;
+    char *dev_name;
 
     ip_addr_t ip_addr;
     mac_addr_t mac_addr;
@@ -98,19 +86,35 @@ typedef struct abs_dev_s {
     struct abs_dev_s *lower_devs_list;      
 } abs_dev_t;
 
-/** Тип сетевой топологии. */
-typedef struct tinynet_conf_s {
-    net_types_e net_type;
-    tinynet_char_t *net_name;
-    tinynet_char_t *net_description;
-
-    abs_dev_t *devs;
-} tinynet_conf_t;
-
 typedef enum machine_status_e {
     SUCCESS = 1,
     FAILURE = 0
 } machine_status_t;
+
+typedef struct adjacency_node_s {
+    __uint8_t weight;    
+    dev_basic_info_t basic_info;                
+    struct adjacency_node_s *next;
+} adjacency_node_t;
+
+typedef struct net_graph_s {
+    size_t rc;                            /** Number of routers. */
+    size_t sc;                            /** Number of switches. */
+    size_t hc;                            /** Number of hosts. */
+     
+    adjacency_node_t **adjacency_list;  
+} net_graph_t;
+
+
+/** Тип сетевой топологии. */
+typedef struct tinynet_conf_s {
+    net_types_e net_type;
+
+    char *net_name;
+    char *net_description;
+
+    net_graph_t *net_graph;
+} tinynet_conf_t;
 
 /** Network configuratin
  *  parser state machine states. */
@@ -160,28 +164,13 @@ typedef enum machine_states_e {
     STATE_STOP     
 } machine_states_t;
 
-/** parser state. */
-typedef struct parser_state_s {
-    machine_states_t state;                   /** The current parse state */
-
-    dev_basic_info_t host;                    /** Host buffer. */
-    dev_basic_info_t switch_;                 /** LAN(switch) buffer. */
-    dev_basic_info_t router;                  /** WAN(router) buffer. */
-
-    abs_dev_t *host_list;                     /** Temporary buffer for each LAN. */
-    abs_dev_t *lans_list;                     /** Temporary buffer for each WAN. */
-
-    abs_dev_t *wans_list;                     /** Master list of WANs. */
-
-    net_types_e net_conf_type;               /** Master network configuration type. */
-    tinynet_char_t *net_conf_name;           /** Master network configuration name. */
-    tinynet_char_t *net_conf_description;    /** Master network configuration description. */
-} parser_state_t;
-
 void 
 dump_net_conf(tinynet_conf_t *net_conf);
 
 void
 destroy_net_conf(tinynet_conf_t *net_conf);
+
+int 
+graph_by_config(tinynet_conf_t **net_conf);
 
 #endif /** TINYNET_H */

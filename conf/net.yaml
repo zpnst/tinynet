@@ -1,6 +1,6 @@
 ---
 tinynet:
-  net_type: "mesh"
+  net_type: "bus"
   net_name: "tinynet"
   net_description: "example net_description for net_name tinynet"
   wan_devs:
@@ -48,7 +48,29 @@ tinynet:
     - router_name: "router_3"
       router_ip: "203.0.113.1/24"
       router_mac: "02:11:22:33:44:55"
+      router_lan_devs:
+        - switch_name: "switch_31"
+          switch_ip: "203.0.113.30/24"
+          switch_mac: "01:11:22:33:44:77"
+          switch_hosts:
+            - host_name: "host_311"
+              host_ip: "203.0.113.31/24"
+              host_mac: "10:44:22:33:44:88"
+            - host_name: "host_312"
+              host_ip: "203.0.113.31/24"
+              host_mac: "12:11:47:33:44:94"
     - router_name: "router_4"
       router_ip: "203.0.113.1/24"
       router_mac: "02:11:22:33:44:55"
+      router_lan_devs:
+        - switch_name: "switch_41"
+          switch_ip: "203.0.113.30/24"
+          switch_mac: "01:11:22:33:44:77"
+          switch_hosts:
+            - host_name: "host_411"
+              host_ip: "203.0.113.31/24"
+              host_mac: "10:44:22:33:44:88"
+            - host_name: "host_412"
+              host_ip: "203.0.113.31/24"
+              host_mac: "12:11:47:33:44:94"
 ...

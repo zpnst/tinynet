@@ -6,11 +6,11 @@
 
 /** Парсинг MAC-адреса из строки */
 int 
-parse_mac_addr(mac_addr_t *mac, tinynet_char_t *mac_str);
+parse_mac_addr(mac_addr_t *mac, char *mac_str);
 
 /** Преобразование MAC-адреса в строку */
 void 
-mac_addr_to_string(mac_addr_t *mac, tinynet_char_t *buffer, size_t len);
+mac_addr_to_string(mac_addr_t *mac, char *buffer, size_t len);
 
 int
 is_mac_exists(mac_addr_t *mac);

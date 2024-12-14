@@ -5,7 +5,7 @@
 #include "src/tinynet.h"
 
 int 
-parse_ip_addr(ip_addr_t *ip, tinynet_char_t *ip_str) 
+parse_ip_addr(ip_addr_t *ip, char *ip_str) 
 {
     char addr_buf[INET_ADDRSTRLEN] = {0};
     char *slash = strchr(ip_str, '/');
@@ -33,7 +33,7 @@ is_ip_addr_in_subnet(ip_addr_t *ip, ip_addr_t *subnet)
 }
 
 void 
-ip_addr_to_string(ip_addr_t *ip, tinynet_char_t *buffer, size_t len) 
+ip_addr_to_string(ip_addr_t *ip, char *buffer, size_t len) 
 {
     struct in_addr addr;
     addr.s_addr = ip->addr;

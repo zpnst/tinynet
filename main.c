@@ -6,27 +6,26 @@
 
 #include "src/tinynet.h"
 
-#include "src/fsm/parser.h"
+#include "src/fsm/construct.h"
 
 #include "src/viz/viz.h"
 
-const tinynet_char_t *yaml_file = "conf/net.yaml";
-const tinynet_char_t *dot_file = "conf/data/net.dot";
+const char *dot_file = "conf/data/net.dot";
 
 int 
 main(void) 
 {
     tinynet_conf_t *network = NULL;
-    int exit_code = parse_yaml(&network, yaml_file);
-
-    if (exit_code != EXIT_SUCCESS) {
+    int err = graph_by_config(&network);
+    if (err != EXIT_SUCCESS) {
         LOG_ERROR_PREFIX("Failed to parse YAML file\n");
-        return EXIT_FAILURE;
+        return err;
     }
 
-    dump_net_conf(network);
+    dump_net_links(network);
+    
+    // write_dot_file(network, dot_file, SHOW_IP, SHOW_MAC);
 
-    write_dot_file(network, dot_file, SHOW_IP, SHOW_MAC);
     destroy_net_conf(network);
 
     return EXIT_SUCCESS;

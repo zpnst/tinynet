@@ -3,8 +3,9 @@
 
 #include "src/tinynet.h"
 
+
 void
-panic(tinynet_char_t *message)
+panic(char *message)
 {
     LOG_PANIC_PREFIX(message);
     exit(1);
@@ -20,10 +21,18 @@ panic_alloc(size_t size)
     return new_prt;
 }
 
-tinynet_char_t *
-panic_strdup(tinynet_char_t *string)
+void 
+safety_free(void *mem) 
 {
-    tinynet_char_t *new_char = strdup(string ? string : "");
+    if (mem) {
+        free(mem);
+    }
+}
+
+char *
+panic_strdup(char *string)
+{
+    char *new_char = strdup(string ? string : "");
     if (!new_char) {
         panic("out of memory");
     }

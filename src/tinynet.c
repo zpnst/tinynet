@@ -7,7 +7,7 @@
 #include "src/net/addr/mac.h"
 
 static void 
-handle_device_type(device_e device_type, tinynet_char_t *buffer, size_t len) 
+handle_device_type(device_e device_type, char *buffer, size_t len) 
 {
     if (device_type == ROUTER_T) {
         snprintf(buffer, len, "<rout>");
@@ -21,7 +21,7 @@ handle_device_type(device_e device_type, tinynet_char_t *buffer, size_t len)
 } 
 
 static void 
-handle_net_type(net_types_e net_type, tinynet_char_t *buffer, size_t len) 
+handle_net_type(net_types_e net_type, char *buffer, size_t len) 
 {
     if (net_type == MESH_NET_T) {
         snprintf(buffer, len, "mesh");
@@ -44,50 +44,41 @@ log_msg_prefix(const char *msg_prefix, const char *color, const char *format, ..
     va_end(args);
 }
 
+// static void
+// print_char() {
+//     if (child->next) {
+//             printf("(%s), ", child->basic_info.dev_name);
+//         } else {
+//             printf("(%s)", child->basic_info.dev_name);
+//         }
+// }
+
 void 
-dump_net_conf(tinynet_conf_t *net_conf) 
+dump_net_links(tinynet_conf_t *net_conf) 
 {   
-    tinynet_char_t ip_buffer[IP_BUFFER_S];
-    tinynet_char_t mac_buffer[MAC_BUFFER_S];
+    adjacency_node_t **list = net_conf->net_graph->adjacency_list;
+    size_t dev_c = net_conf->net_graph->rc + net_conf->net_graph->sc + net_conf->net_graph->hc;
 
-    tinynet_char_t net_type_buffer[NET_T_BUFFER_S];
-    tinynet_char_t dev_type_buffer[DEVICE_T_BUFFER_S];
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
 
-    handle_net_type(net_conf->net_type, net_type_buffer, sizeof(net_type_buffer));
+        printf("[%s] --> ", list[iter]->basic_info.dev_name);
+        for (adjacency_node_t *child = list[iter]->next; child != NULL; child = child->next) {
 
-    printf("[%s] type: '%s'\n[%s] name: '%s'\n[%s] description: '%s'\n\n", 
-    COLORFY_GREEN("NET"), 
-    net_type_buffer, 
-    COLORFY_GREEN("NET"), 
-    net_conf->net_name, 
-    COLORFY_GREEN("NET"), 
-    net_conf->net_description
-    );
-
-    for (abs_dev_t *w = net_conf->devs; w; w = w->next) {
-        
-        ip_addr_to_string(&w->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-        mac_addr_to_string(&w->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-        handle_device_type(w->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-        printf("[%s] name: %s, type: %s, ip: %s, mac: %s\n", COLORFY_PURPLE("ROUT"), w->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
-
-        for (abs_dev_t *l = w->lower_devs_list; l; l = l->next) {
+            switch (child->basic_info.dev_type) {
+            case ROUTER_T:
+                /* code */
+                break;
+            case SWITCH_T:
+                /* code */
+                break;
+            case HOST_T:
+                /* code */
+                break;
             
-            ip_addr_to_string(&l->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-            mac_addr_to_string(&l->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-            handle_device_type(l->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-            printf("[%s]     name: %s, type: %s, ip: %s, mac: %s\n", COLORFY_BLUE("SWIT"), l->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
-
-            for (abs_dev_t *h = l->lower_devs_list; h; h = h->next) {
-                
-                ip_addr_to_string(&h->basic_info.ip_addr, ip_buffer, sizeof(ip_buffer));
-                mac_addr_to_string(&h->basic_info.mac_addr, mac_buffer, sizeof(mac_buffer));
-                handle_device_type(h->basic_info.dev_type, dev_type_buffer, sizeof(dev_type_buffer));
-
-                printf("[%s]         name: %s, type: %s, ip: %s, mac: %s\n", COLORFY_GRAY("HOST"), h->basic_info.dev_name, dev_type_buffer, ip_buffer, mac_buffer);
+            default:
+                break;
             }
         }
+        printf("\n");
     }
 }

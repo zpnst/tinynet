@@ -45,7 +45,7 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(SRCS)
 run: all
 	@./$(BIN_DIR)/$(TARGET)
 
-run_debug:
+run_debug: debug
 	@cgdb ./$(BIN_DIR)/$(DEBUG_TARGET)
 
 clean:

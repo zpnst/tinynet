@@ -4,12 +4,15 @@
 #include "src/tinynet.h"
 
 void
-panic(tinynet_char_t *message);
+panic(char *message);
 
 void *
 panic_alloc(size_t size);
 
-tinynet_char_t *
-panic_strdup(tinynet_char_t *string);
+void 
+safety_free(void *mem);
+
+char *
+panic_strdup(char *string);
 
 #endif /** SYS_H */
