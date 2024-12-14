@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -157,9 +158,9 @@ graph_by_config(tinynet_conf_t **net_conf)
     }
 
     net_graph_t *graph = build_net_graph(parser_state);
-
-    size_t dev_c = graph->rc + graph->sc + graph->hc;
     net_types_e ctx_net_type = parser_state->net_conf_type;
+
+    srand(time(NULL));
 
     switch (ctx_net_type) {
         case MESH_NET_T:

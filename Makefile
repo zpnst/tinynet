@@ -9,7 +9,9 @@ DEVICES_DIR = $(NET_DIR)/devices
 NETMAN_DIR = $(NET_DIR)/netman
 ADDR_DIR = $(NET_DIR)/addr
 
+GVC_DYNIB = gvc 
 YAML_DYNLIB = yaml
+GRAPH_DYNLIB = cgraph
 
 TARGET = tinynet
 DEBUG_TARGET = debug_tinynet
@@ -25,7 +27,7 @@ SRCS = $(wildcard $(SRC_DIR)/*.c) \
 CC = clang
 CFLAGS = -Wall -Wextra -Wno-switch -I.
 DEBUG_FLAGS = -g3 -ggdb
-LDFLAGS = -l$(YAML_DYNLIB) 
+LDFLAGS = -l$(YAML_DYNLIB) -l$(GVC_DYNIB) -l$(GRAPH_DYNLIB) 
 
 all: clean $(BIN_DIR)/$(TARGET)
 
@@ -45,6 +47,13 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(SRCS)
 run: all
 	@./$(BIN_DIR)/$(TARGET)
 
+viz:
+	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
+
+vrun: all
+	@./$(BIN_DIR)/$(TARGET)
+	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
+
 run_debug: debug
 	@cgdb ./$(BIN_DIR)/$(DEBUG_TARGET)
 
@@ -53,4 +62,4 @@ clean:
 	@find . -name "*.o" -delete
 	@echo "Cleaned up build files."
 
-.PHONY: all clean run debug test run_debug
+.PHONY: all viz vrun run clean debug run_debug

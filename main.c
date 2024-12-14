@@ -22,9 +22,8 @@ main(void)
         return err;
     }
 
-    dump_net_links(network);
-    
-    // write_dot_file(network, dot_file, SHOW_IP, SHOW_MAC);
+    dump_net_links(network, ENANBLE_NET_INFO);
+    build_viz_file(network, dot_file, DONT_SHOW_IP, DONT_SHOW_MAC);
 
     destroy_net_conf(network);
 

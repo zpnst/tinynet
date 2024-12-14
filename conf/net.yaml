@@ -1,8 +1,8 @@
 ---
 tinynet:
-  net_type: "bus"
+  net_type: "ring"
   net_name: "tinynet"
-  net_description: "example net_description for net_name tinynet"
+  net_description: "Hello tinynet! The best network mmodel"
   wan_devs:
     - router_name: "router_1"
       router_ip: "203.0.113.1/24"

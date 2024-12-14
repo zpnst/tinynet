@@ -1,125 +1,140 @@
-// #include <stdio.h>
-// #include <string.h>
-// #include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-// #include "src/sys.h"  
-// #include "src/tinynet.h"  
+#include "src/sys.h"  
+#include "src/tinynet.h"  
+#include "src/net/addr/ip.h"
+#include "src/net/addr/mac.h"
 
-// #include "src/net/addr/ip.h"
-// #include "src/net/addr/mac.h"
+#define DEV_WEIGHT_BUFFER_S 3
+#define DEV_NAME_BUFFER_S 128
+#define DEV_DOT_LABEL_BUFFER_S 256
 
-// static const char*
-// get_color_by_device_type(device_e dev_type)
-// {
-//     switch (dev_type) {
-//     case ROUTER_T:
-//         return "purple";
-//     case SWITCH_T:
-//         return "blue";
-//     case HOST_T:
-//         return "black";
-//     default:
-//         panic("wrong device type");
-//     }
-// }
+static const char*
+get_color_by_device_type(device_e dev_type)
+{
+    switch (dev_type) {
+    case ROUTER_T:
+        return "purple";
+    case SWITCH_T:
+        return "blue";
+    case HOST_T:
+        return "black";
+    default:
+        panic("incorrect device type");
+    }
+}
 
-// static const char*
-// get_shape_by_device_type(device_e dev_type) 
-// {
-//     switch (dev_type) {
-//     case ROUTER_T:
-//         return "diamond";
-//     case SWITCH_T:
-//         return "ellipse";
-//     case HOST_T:
-//         return "box";
-//     default:
-//         panic("wrong device type");
-//     }
-// }
+static const char*
+get_shape_by_device_type(device_e dev_type) 
+{
+    switch (dev_type) {
+    case ROUTER_T:
+        return "diamond";
+    case SWITCH_T:
+        return "ellipse";
+    case HOST_T:
+        return "box";
+    default:
+        panic("incorrect device type");
+    }
+}
 
-// static void
-// print_device(FILE *dotf, abs_dev_t *dev, int show_ip, int show_mac)
-// {
-//     if (dev == NULL) {
-//         return;
-//     }
+static const char*
+get_topology_type_string(net_types_e net_type)
+{
+    switch(net_type) {
+    case MESH_NET_T:
+        return "Mesh";
+    case RING_NET_T:
+        return "Ring";
+    case BUS_NET_T:
+        return "Bus";
+    default:
+        panic("incorrect device type");
+    }
+}
 
-//     const char *shape = get_shape_by_device_type(dev->basic_info.dev_type);
-//     const char *color = get_color_by_device_type(dev->basic_info.dev_type);
+int 
+build_viz_file(tinynet_conf_t *conf, const char *filename, int show_ip, int show_mac) 
+{
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        perror("Cannot open file");
+        return -1;
+    }
 
-//     char ip_str[IP_BUFFER_S];
-//     char mac_str[MAC_BUFFER_S];
+    fprintf(fp, "graph tinynet {\n");
+    fprintf(fp, "    rankdir=LR;\n");
 
-//     char label[256];
-    
-//     snprintf(label, sizeof(label), "%s", dev->basic_info.dev_name);
-
-//     if (show_ip) {
-//         ip_addr_to_string(&dev->basic_info.ip_addr, ip_str, sizeof(ip_str));
-
-//         strncat(label, "\\n", sizeof(label) - strlen(label) - 1);
-//         strncat(label, ip_str, sizeof(label) - strlen(label) - 1);
-//     }
-
-//     if (show_mac) {
-//         mac_addr_to_string(&dev->basic_info.mac_addr, mac_str, sizeof(mac_str));
-
-//         strncat(label, "\\n", sizeof(label) - strlen(label) - 1);
-//         strncat(label, mac_str, sizeof(label) - strlen(label) - 1);
-//     }
-
-//     fprintf(dotf, "    \"%s\" [shape=%s, label=\"%s\", color=%s];\n", 
-//             dev->basic_info.dev_name, 
-//             shape,
-//             label,
-//             color);
-
-//     abs_dev_t *child = dev->lower_devs_list;
-//     while (child) {
-//         print_device(dotf, child, show_ip, show_mac);
-//         fprintf(dotf, "    \"%s\" -- \"%s\";\n", 
-//                 dev->basic_info.dev_name,
-//                 child->basic_info.dev_name);
-//         child = child->next;
-//     }
-// }
+    fprintf(fp, "    labelloc=top;\n");
+    fprintf(fp, "    labeljust=left;\n");
 
 
-// int
-// write_dot_file(tinynet_conf_t *conf, const char *filename, int show_ip, int show_mac) 
-// {
-//     FILE *dotf = fopen(filename, "w");
-//     if (!dotf) {
-//         fprintf(stderr, "Failed to open file %s for writing.\n", filename);
-//         return -1;
-//     }
+    fprintf(fp, "    label=<\n");
+    fprintf(fp, "    <TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\">\n");
+    fprintf(fp, "        <TR><TD ALIGN=\"LEFT\"><B>Topology</B>: %s</TD></TR>\n", get_topology_type_string(conf->net_type));
+    fprintf(fp, "        <TR><TD ALIGN=\"LEFT\"><B>Name</B>: %s</TD></TR>\n", conf->net_name);
+    fprintf(fp, "        <TR><TD ALIGN=\"LEFT\"><B>Description</B>: %s</TD></TR>\n", conf->net_description);
+    fprintf(fp, "    </TABLE>\n");
+    fprintf(fp, "    >;\n");
 
-//     fprintf(dotf, "graph %s {\n", conf->net_name ? conf->net_name : "network");
-//     fprintf(dotf, "    label=\"%s topology", conf->net_name ? conf->net_name : "");
-//     if (conf->net_description && strlen(conf->net_description) > 0) {
-//         fprintf(dotf, "\\n%s", conf->net_description);
-//     }
-//     fprintf(dotf, "\";\n");
-//     fprintf(dotf, "    labelloc=top;\n");
-//     fprintf(dotf, "    fontsize=12;\n");
-//     fprintf(dotf, "    node [fontsize=10];\n");
 
-//     //abs_dev_t *dev = conf->devs;
-//     // abs_dev_t *prev_dev = NULL;
+    size_t dev_c = conf->net_graph->rc + conf->net_graph->sc + conf->net_graph->hc;
 
-//     // while (dev) {
-//     //     print_device(dotf, dev, show_ip, show_mac);
-//     //     if (prev_dev) {
-//     //         fprintf(dotf, "    \"%s\" -- \"%s\";\n", 
-//     //                 prev_dev->basic_info.dev_name,
-//     //                 dev->basic_info.dev_name);
-//     //     }
-//     //     prev_dev = dev;
-//     //     dev = dev->next;
-//     // }
+    /** Формирование узлоы */
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
+        adjacency_node_t *ctx = conf->net_graph->adjacency_list[iter];
+        if (!ctx) continue; 
 
-//     // fprintf(dotf, "}\n");
-//     // fclose(dotf);
-//     return 0;
-// }
+        char dev_name[DEV_NAME_BUFFER_S];
+        snprintf(dev_name, sizeof(dev_name), "%s", ctx->basic_info.dev_name);
+
+        char dev_label[DEV_DOT_LABEL_BUFFER_S];
+        snprintf(dev_label, sizeof(dev_label), "%s", dev_name);
+
+        if (show_ip) {
+            char ip_buffer[IP_BUFFER_S];
+            ip_addr_to_string(&ctx->basic_info.ip_addr, ip_buffer, IP_BUFFER_S);
+            strncat(dev_label, "\\nIP: ", sizeof(dev_label) - strlen(dev_label) - 1);
+            strncat(dev_label, ip_buffer, sizeof(dev_label) - strlen(dev_label) - 1);
+        }
+        if (show_mac) {
+            char mac_buffer[MAC_BUFFER_S];
+            mac_addr_to_string(&ctx->basic_info.mac_addr, mac_buffer, MAC_BUFFER_S);
+            strncat(dev_label, "\\nMAC: ", sizeof(dev_label) - strlen(dev_label) - 1);
+            strncat(dev_label, mac_buffer, sizeof(dev_label) - strlen(dev_label) - 1);
+        }
+
+        fprintf(fp, "    \"%s\" [shape=%s, color=%s, label=\"%s\"];\n", dev_name,
+                get_shape_by_device_type(ctx->basic_info.dev_type),
+                get_color_by_device_type(ctx->basic_info.dev_type),
+                dev_label);
+    }
+
+    /** Формирование связей между узлами(рёбер) */
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
+        adjacency_node_t *ctx = conf->net_graph->adjacency_list[iter];
+
+        while (ctx) {
+            if (ctx->weight > 0) {
+                char dev1[DEV_NAME_BUFFER_S], dev2[DEV_NAME_BUFFER_S];
+
+                snprintf(dev1, sizeof(dev1), "%s", conf->net_graph->adjacency_list[iter]->basic_info.dev_name);
+                snprintf(dev2, sizeof(dev2), "%s", ctx->basic_info.dev_name);
+
+                if (strcmp(dev1, dev2) < 0) { 
+                    char weight_str[DEV_WEIGHT_BUFFER_S];
+                    snprintf(weight_str, sizeof(weight_str), "%d", ctx->weight);
+                    fprintf(fp, "    \"%s\" -- \"%s\" [label=\"%s\"];\n", dev1, dev2, weight_str);
+                }
+            }
+            ctx = ctx->next;
+        }
+    }
+    fprintf(fp, "}\n");
+    fclose(fp);
+
+    return 0;
+}

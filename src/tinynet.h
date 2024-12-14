@@ -13,6 +13,12 @@
 #define SHOW_MAC 1
 #define DONT_SHOW_MAC 0
 
+#define ENANBLE_NET_INFO 1
+#define DISABLE_NET_INFO 0
+
+#define ENANBLE_NET_INFO 1
+#define DISABLE_NET_INFO 0
+
 /** Длина MAC-адреса. */
 #define MAC_ADDRSTRLEN 6
 
@@ -23,7 +29,7 @@
 #define DEVICE_T_BUFFER_S 7
 
 void 
-log_msg_prefix(const char *msg_prefix, const char *color, const char *format, ...);
+log_msg_prefix(const char *msg_prefix, const char *color, const char *open, const char *close, const char *format, ...);
 
 /** ANSI COLORS */
 #define ANSI_COLOR_RED       "\x1b[31m"
@@ -38,9 +44,9 @@ log_msg_prefix(const char *msg_prefix, const char *color, const char *format, ..
 #define COLORFY_GREEN(string) ANSI_COLOR_GREEN string ANSI_COLOR_RESET
 #define COLORFY_PURPLE(string) ANSI_COLOR_PURPLE string ANSI_COLOR_RESET
 
-#define LOG_PANIC_PREFIX(format, ...) log_msg_prefix("PANIC", ANSI_COLOR_RED, format, ##__VA_ARGS__)
-#define LOG_ERROR_PREFIX(format, ...) log_msg_prefix("ERR", ANSI_COLOR_RED, format, ##__VA_ARGS__)
-#define LOG_WARNING_PREFIX(format, ...) log_msg_prefix("WARN", ANSI_COLOR_PURPLE, format, ##__VA_ARGS__)
+#define LOG_PANIC_PREFIX(format, ...) log_msg_prefix("PANIC", ANSI_COLOR_RED, "[", "] ", format, ##__VA_ARGS__)
+#define LOG_ERROR_PREFIX(format, ...) log_msg_prefix("ERR", ANSI_COLOR_RED, "[", "] ", format, ##__VA_ARGS__)
+#define LOG_WARNING_PREFIX(format, ...) log_msg_prefix("WARN", ANSI_COLOR_PURPLE, "[", "] ", format, ##__VA_ARGS__)
 
 typedef enum device_t {
     ROUTER_T,
@@ -165,7 +171,7 @@ typedef enum machine_states_e {
 } machine_states_t;
 
 void 
-dump_net_conf(tinynet_conf_t *net_conf);
+dump_net_links(tinynet_conf_t *net_conf, int enable_net_info);
 
 void
 destroy_net_conf(tinynet_conf_t *net_conf);
