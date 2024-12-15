@@ -118,18 +118,18 @@ build_viz_file(tinynet_conf_t *conf, const char *filename, int show_ip, int show
         adjacency_node_t *ctx = conf->net_graph->adjacency_list[iter];
 
         while (ctx) {
-            if (ctx->weight > 0) {
-                char dev1[DEV_NAME_BUFFER_S], dev2[DEV_NAME_BUFFER_S];
+            
+            char dev1[DEV_NAME_BUFFER_S], dev2[DEV_NAME_BUFFER_S];
 
-                snprintf(dev1, sizeof(dev1), "%s", conf->net_graph->adjacency_list[iter]->basic_info.dev_name);
-                snprintf(dev2, sizeof(dev2), "%s", ctx->basic_info.dev_name);
+            snprintf(dev1, sizeof(dev1), "%s", conf->net_graph->adjacency_list[iter]->basic_info.dev_name);
+            snprintf(dev2, sizeof(dev2), "%s", ctx->basic_info.dev_name);
 
-                if (strcmp(dev1, dev2) < 0) { 
-                    char weight_str[DEV_WEIGHT_BUFFER_S];
-                    snprintf(weight_str, sizeof(weight_str), "%d", ctx->weight);
-                    fprintf(fp, "    \"%s\" -- \"%s\" [label=\"%s\"];\n", dev1, dev2, weight_str);
-                }
+            if (strcmp(dev1, dev2) < 0) { 
+                char weight_str[DEV_WEIGHT_BUFFER_S];
+                snprintf(weight_str, sizeof(weight_str), "%d", ctx->weight);
+                fprintf(fp, "    \"%s\" -- \"%s\" [label=\"%s\"];\n", dev1, dev2, weight_str);
             }
+            
             ctx = ctx->next;
         }
     }

@@ -41,13 +41,13 @@ tree_topology(net_graph_t *graph, parser_state_t *parser_state)
 
         for (abs_dev_t *switch_ = router->lower_devs_list; switch_ != NULL; switch_ = switch_->next) {
             
-            push_rib(graph, riter, to_switches_frame + siter, rand() % 100); 
-            push_rib(graph, to_switches_frame + siter, riter, rand() % 100); 
+            push_rib(graph, riter, to_switches_frame + siter, (rand() % 99 + 1)); 
+            push_rib(graph, to_switches_frame + siter, riter, (rand() % 99 + 1)); 
             
             for (abs_dev_t *host = switch_->lower_devs_list; host != NULL; host = host->next) {
                
-                push_rib(graph, to_switches_frame + siter, to_hosts_frame + hiter, rand() % 100);
-                push_rib(graph, to_hosts_frame + hiter, to_switches_frame + siter, rand() % 100);  
+                push_rib(graph, to_switches_frame + siter, to_hosts_frame + hiter, (rand() % 99 + 1));
+                push_rib(graph, to_hosts_frame + hiter, to_switches_frame + siter, (rand() % 99 + 1));  
                 hiter += 1;
             }
             siter += 1;
@@ -63,8 +63,8 @@ mesh_topology(net_graph_t *graph, parser_state_t *parser_state)
 {
     for (size_t iter = 0; iter < graph->rc; iter += 1) {
         for (size_t jter = iter + 1; jter < graph->rc; jter += 1) {
-            push_rib(graph, iter, jter, rand() % 100); 
-            push_rib(graph, jter, iter, rand() % 100);
+            push_rib(graph, iter, jter, (rand() % 99 + 1)); 
+            push_rib(graph, jter, iter, (rand() % 99 + 1));
         }
     }
     tree_topology(graph, parser_state);
@@ -74,8 +74,8 @@ static void
 ring_topology(net_graph_t *graph, parser_state_t *parser_state) 
 {
     for (size_t iter = 0; iter < graph->rc; iter += 1) {
-        push_rib(graph, iter, (iter + 1) % graph->rc, rand() % 100);
-        push_rib(graph, (iter + 1) % graph->rc, iter, rand() % 100); 
+        push_rib(graph, iter, (iter + 1) % graph->rc, (rand() % 99 + 1));
+        push_rib(graph, (iter + 1) % graph->rc, iter, (rand() % 99 + 1)); 
     }
     tree_topology(graph, parser_state);
 }
@@ -84,8 +84,8 @@ static void
 bus_topology(net_graph_t *graph, parser_state_t *parser_state) 
 {
     for (size_t iter = 0; iter < graph->rc - 1; iter += 1) {
-        push_rib(graph, iter, iter + 1, rand() % 100); 
-        push_rib(graph, iter + 1, iter, rand() % 100); 
+        push_rib(graph, iter, iter + 1, (rand() % 99 + 1)); 
+        push_rib(graph, iter + 1, iter, (rand() % 99 + 1)); 
     }
     tree_topology(graph, parser_state);
 }
