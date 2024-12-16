@@ -118,6 +118,11 @@ typedef struct char_node_s {
     struct char_node_s *next; 
 } char_node_t;
 
+typedef struct hops_matrix_cell_s {
+    __int32_t data;
+    __uint32_t weight;  
+} hops_matrix_cell_t;
+
 /** Тип сетевой топологии. */
 typedef struct tinynet_conf_s {
     net_types_e net_type;
@@ -129,7 +134,7 @@ typedef struct tinynet_conf_s {
     char_node_t **ros_tables_list;     
 
     net_graph_t *net_graph;
-    __int32_t **hops_matrix;
+    hops_matrix_cell_t **hops_matrix;
 
 } tinynet_conf_t;
 

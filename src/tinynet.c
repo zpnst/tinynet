@@ -12,9 +12,9 @@
 static __int32_t
 get_path(tinynet_conf_t *network, __int32_t **ctx_path, __int32_t iter, __int32_t jter)
 {
-    __int32_t **hops_matrix = network->hops_matrix;
+    hops_matrix_cell_t **hops_matrix = network->hops_matrix;
 
-    if (hops_matrix[iter][jter] == -1) {
+    if (hops_matrix[iter][jter].data == -1) {
         panic("incorrect path");
     }
     __int32_t path_size = 0;
@@ -26,7 +26,7 @@ get_path(tinynet_conf_t *network, __int32_t **ctx_path, __int32_t iter, __int32_
     path_size += 1;
     __int32_t current = iter;
     while (current != jter) {
-        current = hops_matrix[current][jter];
+        current = hops_matrix[current][jter].data;
         if (path_size == path_capacity) {
             path_capacity *= 2;
             path = (__int32_t *)realloc(path, sizeof(__int32_t) * path_capacity);
@@ -157,10 +157,12 @@ reconstruct_path(tinynet_conf_t *network, __int32_t iter, __int32_t jter)
     __int32_t *ctx_path = NULL;
     __int32_t path_size = get_path(network, &ctx_path, iter, jter);
 
+    printf("(");
     for (__int32_t kter = 0; kter < path_size; kter += 1) {
         printf("%s", get_device_name_by_index(network, ctx_path[kter]));
         if (kter < path_size - 1) printf(" --> ");
     }
+    printf("), total: %d units", network->hops_matrix[iter][jter].weight);
     printf("\n");
 
     safety_free(ctx_path);

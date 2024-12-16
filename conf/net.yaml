@@ -1,6 +1,6 @@
 ---
 tinynet:
-  net_type: "mesh"
+  net_type: "ring"
   net_name: "tinynet"
   net_description: "Hello tinynet! The best network mmodel"
   wan_devs:
@@ -53,6 +53,9 @@ tinynet:
           switch_mac: "01:11:22:33:44:77"
           switch_hosts:
             - host_name: "host_411"
+              host_ip: "203.0.113.31/24"
+              host_mac: "10:44:22:33:44:88"
+            - host_name: "host_412"
               host_ip: "203.0.113.31/24"
               host_mac: "10:44:22:33:44:88"
 ...

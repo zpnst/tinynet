@@ -12,20 +12,20 @@ floyd_warshall(tinynet_conf_t *net_conf)
     size_t vertex = get_device_count(net_conf);
     
     __uint32_t **dist = (__uint32_t**)panic_alloc(vertex * sizeof(__uint32_t *));
-    __int32_t **hops_matrix = (__int32_t**)panic_alloc(vertex * sizeof(__int32_t *));
+    hops_matrix_cell_t **hops_matrix = (hops_matrix_cell_t**)panic_alloc(vertex * sizeof(hops_matrix_cell_t *));
 
     for (size_t iter = 0; iter < vertex; iter += 1) {
         dist[iter] = (__uint32_t*)panic_alloc(vertex * sizeof(__uint32_t));
-        hops_matrix[iter] = (__int32_t*)panic_alloc(vertex * sizeof(__int32_t));
+        hops_matrix[iter] = (hops_matrix_cell_t*)panic_alloc(vertex * sizeof(hops_matrix_cell_t));
     }
 
     for (size_t iter = 0; iter < vertex; iter += 1) {
         for (size_t jter = 0; jter < vertex; jter += 1) {
             dist[iter][jter] = INT_MAX;
-            hops_matrix[iter][jter] = -1;
+            hops_matrix[iter][jter].data = -1;
         }
         dist[iter][iter] = 0;
-        hops_matrix[iter][iter] = (__int32_t)iter;
+        hops_matrix[iter][iter].data = (__int32_t)iter;
     }
 
 
@@ -43,7 +43,7 @@ floyd_warshall(tinynet_conf_t *net_conf)
                     /** Тривиальный путь от iter к jter при инициализации 
                      *  то есть следующий узел после iter на кратчайшем пути к jter — это jter
                     */
-                    hops_matrix[iter][jter] = jter; 
+                    hops_matrix[iter][jter].data = jter; 
                 }
             }
             next_node = next_node->next;
@@ -63,21 +63,19 @@ floyd_warshall(tinynet_conf_t *net_conf)
                     /** Первый шаг на пути от iter к jter такой же, 
                      * как и первый шаг на пути от iter к kter, так
                      * как путь iter -> kter -> jter начинается так же, как путь iter -> kter */
-                    hops_matrix[iter][jter] = hops_matrix[iter][kter];
+                    hops_matrix[iter][jter].data = hops_matrix[iter][kter].data;
                 }
             }
         }
     }
-    
 
-    size_t start_hosts = net_conf->net_graph->rc + net_conf->net_graph->sc;
-    size_t end_hosts = start_hosts + net_conf->net_graph->hc;
-
-    for (size_t iter = start_hosts; iter < end_hosts; iter += 1) {
-        for (size_t jter = start_hosts; jter < end_hosts; jter += 1) {
+    for (size_t iter = 0; iter < vertex; iter += 1) {
+        for (size_t jter = 0; jter < vertex; jter += 1) {
             if (dist[iter][jter] == INT_MAX) {
                 panic("incorrect path");
-            } 
+            } else {
+                hops_matrix[iter][jter].weight = dist[iter][jter];
+            }
         }
     }
 
