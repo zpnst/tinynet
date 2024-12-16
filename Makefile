@@ -2,6 +2,7 @@ BIN_DIR = bin
 SRC_DIR = src
 
 FSM_DIR = $(SRC_DIR)/fsm
+ALG_DIR = $(SRC_DIR)/alg
 NET_DIR = $(SRC_DIR)/net
 VIZ_DIR = $(SRC_DIR)/viz
 
@@ -18,6 +19,7 @@ DEBUG_TARGET = debug_tinynet
 
 SRCS = $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard $(VIZ_DIR)/*.c) \
+	   $(wildcard $(ALG_DIR)/*.c) \
 	   $(wildcard $(FSM_DIR)/*.c) \
 	   $(wildcard $(DEVICES_DIR)/*.c) \
 	   $(wildcard $(NETMAN_DIR)/*.c) \

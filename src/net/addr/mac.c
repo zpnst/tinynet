@@ -4,18 +4,18 @@
 
 #include "src/tinynet.h"
 
-int 
+__int32_t 
 parse_mac_addr(mac_addr_t *mac, char *mac_str)
 {
-    unsigned int bytes[MAC_ADDRSTRLEN];
+    __int32_t bytes[MAC_ADDRSTRLEN];
     if (sscanf(mac_str, "%x:%x:%x:%x:%x:%x",
                &bytes[0], &bytes[1], &bytes[2],
                &bytes[3], &bytes[4], &bytes[5]) != 6) {
         fprintf(stderr, "Invalid MAC address: %s\n", mac_str);
         return -1;
     }
-    for (int i = 0; i < 6; i++) {
-        mac->addr[i] = (uint8_t)bytes[i];
+    for (__int32_t iter = 0; iter < MAC_ADDRSTRLEN; iter += 1) {
+        mac->addr[iter] = (uint8_t)bytes[iter];
     }
     return EXIT_SUCCESS;
 }
@@ -28,7 +28,7 @@ mac_addr_to_string(mac_addr_t *mac, char *buffer, size_t len)
              mac->addr[3], mac->addr[4], mac->addr[5]);
 }
 
-int
+__int32_t
 is_mac_exists(mac_addr_t *mac) 
 {
     if (!mac->addr[0] && !mac->addr[1] && !mac->addr[2] && !mac->addr[3] && !mac->addr[4] && !mac->addr[5]) {

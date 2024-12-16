@@ -8,6 +8,8 @@
 
 #include "src/fsm/construct.h"
 
+#include "src/alg/fw.h"
+
 #include "src/viz/viz.h"
 
 const char *dot_file = "conf/data/net.dot";
@@ -24,6 +26,9 @@ main(void)
 
     dump_net_links(network, ENANBLE_NET_INFO);
     build_viz_file(network, dot_file, DONT_SHOW_IP, DONT_SHOW_MAC);
+
+    floyd_warshall(network);
+    dump_shortest_hops(network);
 
     destroy_net_conf(network);
 

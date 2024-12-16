@@ -9,7 +9,7 @@
 #include "src/fsm/parser.h"
 #include "src/fsm/construct.h"
 
-static int
+static __int32_t
 tiny_rand()
 {
     return (rand() % 99 + 1);
@@ -42,7 +42,9 @@ lanstopology(net_graph_t *graph, parser_state_t *parser_state)
     size_t to_switches_frame = graph->rc;
     size_t to_hosts_frame = graph->rc + graph->sc;
 
-    size_t riter = 0, siter = 0, hiter = 0;
+    size_t riter = 0, siter = 0, hiter = 0; 
+
+    __int32_t ctx_rand = 0;
 
     for (abs_dev_t *router = parser_state->wans_list; router != NULL; router = router->next) {
 
@@ -52,20 +54,22 @@ lanstopology(net_graph_t *graph, parser_state_t *parser_state)
 
         for (abs_dev_t *switch_ = router->lower_devs_list; switch_ != NULL; switch_ = switch_->next) {
 
-            push_rib(graph, riter, to_switches_frame + siter, tiny_rand()); 
-            push_rib(graph, to_switches_frame + siter, riter, tiny_rand()); 
+            ctx_rand = tiny_rand();
+            push_rib(graph, riter, to_switches_frame + siter, ctx_rand); 
+            push_rib(graph, to_switches_frame + siter, riter, ctx_rand); 
 
             if (internal_sc != 0) {
-                push_rib(graph, prev_switch, to_switches_frame + siter, tiny_rand()); 
-                push_rib(graph, to_switches_frame + siter, prev_switch, tiny_rand());
+                ctx_rand = tiny_rand();
+                push_rib(graph, prev_switch, to_switches_frame + siter, ctx_rand); 
+                push_rib(graph, to_switches_frame + siter, prev_switch, ctx_rand);
                 prev_switch = to_switches_frame + siter;
             }
             internal_sc += 1;
 
             for (abs_dev_t *host = switch_->lower_devs_list; host != NULL; host = host->next) {
-               
-                push_rib(graph, to_switches_frame + siter, to_hosts_frame + hiter, tiny_rand());
-                push_rib(graph, to_hosts_frame + hiter, to_switches_frame + siter, tiny_rand());  
+                ctx_rand = tiny_rand();
+                push_rib(graph, to_switches_frame + siter, to_hosts_frame + hiter, ctx_rand);
+                push_rib(graph, to_hosts_frame + hiter, to_switches_frame + siter, ctx_rand);  
                 hiter += 1;
             }
             siter += 1;
@@ -78,11 +82,13 @@ lanstopology(net_graph_t *graph, parser_state_t *parser_state)
 
 static void 
 mesh_topology(net_graph_t *graph, parser_state_t *parser_state) 
-{
+{    
+    __int32_t ctx_rand = 0;
     for (size_t iter = 0; iter < graph->rc; iter += 1) {
         for (size_t jter = iter + 1; jter < graph->rc; jter += 1) {
-            push_rib(graph, iter, jter, tiny_rand()); 
-            push_rib(graph, jter, iter, tiny_rand());
+            ctx_rand = tiny_rand();
+            push_rib(graph, iter, jter, ctx_rand); 
+            push_rib(graph, jter, iter, ctx_rand);
         }
     }
     lanstopology(graph, parser_state);
@@ -90,20 +96,24 @@ mesh_topology(net_graph_t *graph, parser_state_t *parser_state)
 
 static void 
 ring_topology(net_graph_t *graph, parser_state_t *parser_state) 
-{
+{   
+    __int32_t ctx_rand = 0;
     for (size_t iter = 0; iter < graph->rc; iter += 1) {
-        push_rib(graph, iter, (iter + 1) % graph->rc, tiny_rand());
-        push_rib(graph, (iter + 1) % graph->rc, iter, tiny_rand()); 
+        ctx_rand = tiny_rand();
+        push_rib(graph, iter, (iter + 1) % graph->rc, ctx_rand);
+        push_rib(graph, (iter + 1) % graph->rc, iter, ctx_rand); 
     }
     lanstopology(graph, parser_state);
 }
 
 static void 
 bus_topology(net_graph_t *graph, parser_state_t *parser_state) 
-{
+{   
+    __int32_t ctx_rand = 0;
     for (size_t iter = 0; iter < graph->rc - 1; iter += 1) {
-        push_rib(graph, iter, iter + 1, tiny_rand()); 
-        push_rib(graph, iter + 1, iter, tiny_rand()); 
+        ctx_rand = tiny_rand();
+        push_rib(graph, iter, iter + 1, ctx_rand); 
+        push_rib(graph, iter + 1, iter, ctx_rand); 
     }
     lanstopology(graph, parser_state);
 }
@@ -164,10 +174,10 @@ build_net_graph(parser_state_t *parser_state)
     return net_graph;
 }
 
-int 
+__int32_t 
 graph_by_config(tinynet_conf_t **net_conf) 
 {   
-    int err;
+    __int32_t err;
     parser_state_t *parser_state = NULL;
 
     err = parse_yaml(&parser_state);
@@ -202,6 +212,7 @@ graph_by_config(tinynet_conf_t **net_conf)
     (*net_conf)->net_description = (char *)panic_strdup(parser_state->net_conf_description);
 
     (*net_conf)->net_graph = graph;
+    (*net_conf)->hops_matrix = NULL;
 
     destroy_parser_state(parser_state);
 
@@ -275,8 +286,9 @@ add_host(abs_dev_t **hosts, device_e host_type, dev_basic_info_t host_binf)
 }
 
 void
-destroy_net_graph(net_graph_t *graph) 
+destroy_net_graph(tinynet_conf_t *net_conf) 
 {   
+    net_graph_t *graph = net_conf->net_graph;
     size_t dev_c = graph->rc + graph->sc + graph->hc;
     for (size_t iter = 0; iter < dev_c; iter += 1) {
 
@@ -296,6 +308,17 @@ destroy_net_graph(net_graph_t *graph)
     safety_free(graph);
 }
 
+void 
+destory_hops_matrix(tinynet_conf_t *net_conf)
+{
+    size_t vertex = get_device_count(net_conf);
+
+    for (size_t iter = 0; iter < vertex; iter += 1) {
+        safety_free(net_conf->hops_matrix[iter]);
+    }
+    safety_free(net_conf->hops_matrix);
+}
+
 
 void
 destroy_net_conf(tinynet_conf_t *net_conf)
@@ -303,8 +326,11 @@ destroy_net_conf(tinynet_conf_t *net_conf)
     safety_free(net_conf->net_name);
     safety_free(net_conf->net_description);
 
-    destroy_net_graph(net_conf->net_graph);
+    destory_hops_matrix(net_conf);
+    destroy_net_graph(net_conf);
+
     safety_free(net_conf);
+
 }
 
 void 

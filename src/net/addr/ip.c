@@ -4,7 +4,7 @@
 
 #include "src/tinynet.h"
 
-int 
+__int32_t 
 parse_ip_addr(ip_addr_t *ip, char *ip_str) 
 {
     char addr_buf[INET_ADDRSTRLEN] = {0};
@@ -25,7 +25,7 @@ parse_ip_addr(ip_addr_t *ip, char *ip_str)
     return EXIT_SUCCESS;
 }
 
-int 
+__int32_t 
 is_ip_addr_in_subnet(ip_addr_t *ip, ip_addr_t *subnet) 
 {
     uint32_t mask = htonl(~((1 << (32 - subnet->mask)) - 1)); 

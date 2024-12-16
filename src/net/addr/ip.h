@@ -5,11 +5,11 @@
 #include "src/tinynet.h"
 
 /** Парсинг IP-адреса из строки */
-int  
+__int32_t  
 parse_ip_addr(ip_addr_t *ip, char *ip_str); 
 
 /** Проверка, находится ли IP-адрес в подсети */
-int 
+__int32_t 
 is_ip_addr_in_subnet(ip_addr_t *ip, ip_addr_t *subnet);
 
 /** Преобразование IP-адреса в строку */

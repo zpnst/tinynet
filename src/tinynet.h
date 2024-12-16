@@ -120,6 +120,7 @@ typedef struct tinynet_conf_s {
     char *net_description;
 
     net_graph_t *net_graph;
+    __int32_t **hops_matrix;
 } tinynet_conf_t;
 
 /** Network configuratin
@@ -171,12 +172,26 @@ typedef enum machine_states_e {
 } machine_states_t;
 
 void 
-dump_net_links(tinynet_conf_t *net_conf, int enable_net_info);
+dump_net_links(tinynet_conf_t *net_conf, __int32_t enable_net_info);
 
 void
 destroy_net_conf(tinynet_conf_t *net_conf);
 
-int 
+__int32_t 
 graph_by_config(tinynet_conf_t **net_conf);
+
+size_t 
+get_device_count(tinynet_conf_t *net_conf);
+
+const char* 
+get_device_name_by_index(tinynet_conf_t *net_conf, __int32_t idx);
+
+__int32_t 
+get_device_index_by_name(tinynet_conf_t *net_conf, const char *name);
+
+void 
+reconstruct_path(tinynet_conf_t *net_conf, __int32_t iter, __int32_t jter, __int32_t **hops_matrix);
+void 
+dump_shortest_hops(tinynet_conf_t *net_conf);
 
 #endif /** TINYNET_H */
