@@ -28,6 +28,8 @@
 #define NET_T_BUFFER_S 5
 #define DEVICE_T_BUFFER_S 7
 
+#define ROS_ENTRY_BUFFER_S 256
+
 void 
 log_msg_prefix(const char *msg_prefix, const char *color, const char *open, const char *close, const char *format, ...);
 
@@ -111,6 +113,10 @@ typedef struct net_graph_s {
     adjacency_node_t **adjacency_list;  
 } net_graph_t;
 
+typedef struct char_node_s {
+    char *entry;
+    struct char_node_s *next; 
+} char_node_t;
 
 /** Тип сетевой топологии. */
 typedef struct tinynet_conf_s {
@@ -119,8 +125,12 @@ typedef struct tinynet_conf_s {
     char *net_name;
     char *net_description;
 
+    /** Порядок устройств в списке тут такой же, как и в списке смежности */
+    char_node_t **ros_tables_list;     
+
     net_graph_t *net_graph;
     __int32_t **hops_matrix;
+
 } tinynet_conf_t;
 
 /** Network configuratin
@@ -172,26 +182,36 @@ typedef enum machine_states_e {
 } machine_states_t;
 
 void 
-dump_net_links(tinynet_conf_t *net_conf, __int32_t enable_net_info);
+dump_net_links(tinynet_conf_t *network, __int32_t enable_net_info);
 
 void
-destroy_net_conf(tinynet_conf_t *net_conf);
+destroy_net_conf(tinynet_conf_t *network);
 
 __int32_t 
-graph_by_config(tinynet_conf_t **net_conf);
+graph_by_config(tinynet_conf_t **network);
 
 size_t 
-get_device_count(tinynet_conf_t *net_conf);
+get_device_count(tinynet_conf_t *network);
 
 const char* 
-get_device_name_by_index(tinynet_conf_t *net_conf, __int32_t idx);
+get_device_name_by_index(tinynet_conf_t *network, __int32_t idx);
 
 __int32_t 
-get_device_index_by_name(tinynet_conf_t *net_conf, const char *name);
+get_device_index_by_name(tinynet_conf_t *network, const char *name);
 
 void 
-reconstruct_path(tinynet_conf_t *net_conf, __int32_t iter, __int32_t jter, __int32_t **hops_matrix);
+reconstruct_path(tinynet_conf_t *network, __int32_t iter, __int32_t jter);
+
 void 
-dump_shortest_hops(tinynet_conf_t *net_conf);
+init_ros_tables(tinynet_conf_t *network);
+
+void 
+dump_shortest_hops(tinynet_conf_t *network);
+
+void 
+dump_ros_tables(tinynet_conf_t *network);
+
+void 
+add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int32_t kter);
 
 #endif /** TINYNET_H */

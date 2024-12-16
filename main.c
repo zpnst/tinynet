@@ -24,11 +24,14 @@ main(void)
         return err;
     }
 
-    dump_net_links(network, ENANBLE_NET_INFO);
+    dump_net_links(network, ENANBLE_NET_INFO); printf("\n");
     build_viz_file(network, dot_file, DONT_SHOW_IP, DONT_SHOW_MAC);
 
     floyd_warshall(network);
+
     dump_shortest_hops(network);
+    init_ros_tables(network); printf("\n");
+    dump_ros_tables(network);
 
     destroy_net_conf(network);
 

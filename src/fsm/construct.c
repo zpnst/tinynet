@@ -319,6 +319,23 @@ destory_hops_matrix(tinynet_conf_t *net_conf)
     safety_free(net_conf->hops_matrix);
 }
 
+void 
+destroy_ros_tables(tinynet_conf_t *net_conf) {
+    size_t dev_c = get_device_count(net_conf);
+
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
+        char_node_t *curr = net_conf->ros_tables_list[iter];
+        while (curr) {
+            char_node_t *tmp = curr->next;
+            safety_free(curr->entry);
+            safety_free(curr);
+            curr = tmp;
+        }
+    }
+    safety_free(net_conf->ros_tables_list);
+    net_conf->ros_tables_list = NULL;
+}
+
 
 void
 destroy_net_conf(tinynet_conf_t *net_conf)
@@ -327,6 +344,7 @@ destroy_net_conf(tinynet_conf_t *net_conf)
     safety_free(net_conf->net_description);
 
     destory_hops_matrix(net_conf);
+    destroy_ros_tables(net_conf);
     destroy_net_graph(net_conf);
 
     safety_free(net_conf);
