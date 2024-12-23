@@ -5,9 +5,6 @@
 #include "src/sys.h"
 #include "src/tinynet.h"
 
-#include "src/net/addr/ip.h"
-#include "src/net/addr/mac.h"
-
 
 static __int32_t
 get_path(tinynet_conf_t *network, __int32_t **ctx_path, __int32_t iter, __int32_t jter)
@@ -15,7 +12,7 @@ get_path(tinynet_conf_t *network, __int32_t **ctx_path, __int32_t iter, __int32_
     hops_matrix_cell_t **hops_matrix = network->hops_matrix;
 
     if (hops_matrix[iter][jter].data == -1) {
-        panic("incorrect path");
+        panic("incorrect path A");
     }
     __int32_t path_size = 0;
     __int32_t path_capacity = 10;

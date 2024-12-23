@@ -6,10 +6,6 @@
 #include "src/fsm/parser.h"
 #include "src/fsm/construct.h"
 
-#include "src/net/addr/ip.h"
-#include "src/net/addr/mac.h"
-
-
 static void 
 yaml_err_msg(machine_states_t expected, machine_states_t received) 
 {
@@ -17,8 +13,6 @@ yaml_err_msg(machine_states_t expected, machine_states_t received)
     LOG_ERROR_PREFIX("Expected state %d, received state %d.\n", expected, received);
     LOG_ERROR_PREFIX("Here is dev template:\n");
     LOG_ERROR_PREFIX("    dev_name: 'name'\n");
-    LOG_ERROR_PREFIX("    dev_ip: 'ip'\n");
-    LOG_ERROR_PREFIX("    dev_mac: 'mac'\n");
 }
 
 static int
@@ -158,7 +152,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
                 return FAILURE;
             }
 
-            free(string_net_type);
+            safety_free(string_net_type);
             *expected_state = STATE_NETNAME;
             s->state = STATE_NETKEYS;
             break;
@@ -177,7 +171,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_SCALAR_EVENT:
             if (s->net_conf_name) {
                 LOG_WARNING_PREFIX("duplicate 'net_name' key.\n");
-                free(s->net_conf_name);
+                safety_free(s->net_conf_name);
             }
             s->net_conf_name = panic_strdup((char *)event->data.scalar.value);
             *expected_state = STATE_NETDESCRIPTION;
@@ -198,7 +192,7 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_SCALAR_EVENT:
             if (s->net_conf_description) {
                 LOG_WARNING_PREFIX("duplicate 'net_description' key.\n");
-                free(s->net_conf_description);
+                safety_free(s->net_conf_description);
             }
             s->net_conf_description = panic_strdup((char *)event->data.scalar.value);
             *expected_state = STATE_WANLIST;
@@ -248,10 +242,6 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             value = (char *)event->data.scalar.value;
             if (strcmp(value, "router_name") == 0) {
                 s->state = STATE_ROUTERNAME;
-            } else if (strcmp(value, "router_ip") == 0) {
-                s->state = STATE_ROUTERIP;
-            } else if (strcmp(value, "router_mac") == 0) {
-                s->state = STATE_ROUTERMAC;
             } else if (strcmp(value, "router_lan_devs") == 0) { /** Change parsing level*/
                 s->state = STATE_LANLIST;
             } else {
@@ -261,15 +251,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             break;
         case YAML_MAPPING_END_EVENT:
 
-            if (!(s->router.ip_addr.addr) || !is_mac_exists(&s->router.mac_addr)) {
-                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->router.dev_name);
-                return FAILURE;
-            }
-
             /** Append new router because mapping end */
+            printf("Append new router because mapping end: %s\n", s->router.dev_name);
             add_router(&s->wans_list, ROUTER_T, s->router, s->lans_list);
 
-            /** Free buffer */
+            /** safety_free buffer */
             memset(&s->router, 0, sizeof(s->router));
 
             /** Reset the pointers */
@@ -296,59 +282,9 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_SCALAR_EVENT:
             if (s->router.dev_name) {
                 LOG_WARNING_PREFIX("duplicate 'router_name' key.\n");
-                free(s->router.dev_name);
+                safety_free(s->router.dev_name);
             }
             s->router.dev_name = panic_strdup((char *)event->data.scalar.value);
-            *expected_state = STATE_ROUTERIP;
-            s->state = STATE_WANKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_ROUTERIP:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->router.ip_addr.addr) {
-                LOG_WARNING_PREFIX("duplicate 'router_ip' key.\n");
-            }
-            char *ip_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_ip_addr(&s->router.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
-                return FAILURE;
-            }
-            free(ip_addr_str);
-            *expected_state = STATE_ROUTERMAC;
-            s->state = STATE_WANKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_ROUTERMAC:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->router.mac_addr.addr[0]) {
-                LOG_WARNING_PREFIX("duplicate 'router_mac' key.\n");
-            }
-            char *mac_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_mac_addr(&s->router.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
-                return FAILURE;
-            }
-            free(mac_addr_str);
             *expected_state = STATE_LANLIST;
             s->state = STATE_WANKEYS;
             break;
@@ -396,10 +332,6 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             value = (char *)event->data.scalar.value;
             if (strcmp(value, "switch_name") == 0) {
                 s->state = STATE_SWITCHNAME;
-            } else if (strcmp(value, "switch_ip") == 0) {
-                s->state = STATE_SWITCHIP;
-            } else if (strcmp(value, "switch_mac") == 0) {
-                s->state = STATE_SWITCHMAC;
             } else if (strcmp(value, "switch_hosts") == 0) { /** Change parsing level*/
                 s->state = STATE_HOSTSLIST;
             } else {
@@ -409,16 +341,11 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             break;
         case YAML_MAPPING_END_EVENT:
 
-
-            if (!(s->switch_.ip_addr.addr) || !is_mac_exists(&s->switch_.mac_addr)) {
-                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->switch_.dev_name);
-                return FAILURE;
-            }
-
             /** Append new switch because mapping end */
+            printf("Append new switch because mapping end: %s\n", s->switch_.dev_name);
             add_switch(&s->lans_list, SWITCH_T, s->switch_, s->host_list);
 
-            /** Free buffers*/
+            /** safety_free buffers*/
             memset(&s->switch_, 0, sizeof(s->switch_));
 
             /** Reset the pointers */
@@ -447,59 +374,9 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_SCALAR_EVENT:
             if (s->switch_.dev_name) {
                 LOG_WARNING_PREFIX("duplicate 'switch_name' key.\n");
-                free(s->switch_.dev_name);
+                safety_free(s->switch_.dev_name);
             }
             s->switch_.dev_name = panic_strdup((char *)event->data.scalar.value);
-            *expected_state = STATE_SWITCHIP;
-            s->state = STATE_LANKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_SWITCHIP:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->switch_.ip_addr.addr) {
-                LOG_WARNING_PREFIX("duplicate 'switch_ip' key.\n");
-            }
-            char *ip_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_ip_addr(&s->switch_.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
-                return FAILURE;
-            }
-            free(ip_addr_str);
-            *expected_state = STATE_SWITCHMAC;
-            s->state = STATE_LANKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_SWITCHMAC:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->switch_.mac_addr.addr[0]) {
-                LOG_WARNING_PREFIX("duplicate 'switch_mac' key.\n");
-            }
-            char *mac_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_mac_addr(&s->switch_.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
-                return FAILURE;
-            }
-            free(mac_addr_str);
             *expected_state = STATE_HOSTSLIST;
             s->state = STATE_LANKEYS;
             break;
@@ -547,10 +424,6 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             value = (char *)event->data.scalar.value;
             if (strcmp(value, "host_name") == 0) {
                 s->state = STATE_HOSTNAME;
-            } else if (strcmp(value, "host_ip") == 0) {
-                s->state = STATE_HOSTIP;
-            } else if (strcmp(value, "host_mac") == 0) {
-                s->state = STATE_HOSTMAC;
             } else {
                 LOG_ERROR_PREFIX("Unexpected key: %s\n", value);
                 return FAILURE;
@@ -558,15 +431,10 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
             break;
         case YAML_MAPPING_END_EVENT:
 
-            if (!(s->host.ip_addr.addr) || !is_mac_exists(&s->host.mac_addr)) {
-                LOG_ERROR_PREFIX("[ERR] %s don't have an IP address or a MAC address\n", s->host.dev_name);
-                return FAILURE;
-            }
-
             /** Append new host because mapping end */
             add_host(&s->host_list, HOST_T, s->host);
 
-            /** Free buffer */
+            /** safety_free buffer */
             memset(&s->host, 0, sizeof(s->host));
 
             /** Reset pointer */
@@ -592,59 +460,9 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_SCALAR_EVENT:
             if (s->host.dev_name) {
                 LOG_WARNING_PREFIX("duplicate 'host_name' key.\n");
-                free(s->host.dev_name);
+                safety_free(s->host.dev_name);
             }
             s->host.dev_name = panic_strdup((char *)event->data.scalar.value);
-            *expected_state = STATE_HOSTIP;
-            s->state = STATE_HOSTKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_HOSTIP:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->host.ip_addr.addr) {
-                LOG_WARNING_PREFIX("duplicate 'host_ip' key.\n");
-            }
-            char *ip_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_ip_addr(&s->host.ip_addr, ip_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect IP address: %s.\n", ip_addr_str);
-                return FAILURE;
-            }
-            free(ip_addr_str);
-            *expected_state = STATE_HOSTMAC;
-            s->state = STATE_HOSTKEYS;
-            break;
-        default:
-            LOG_ERROR_PREFIX("Unexpected event %d in state %d.\n", event->type, s->state);
-            return FAILURE;
-        }
-        break;
-
-    case STATE_HOSTMAC:
-        if (s->state != *expected_state) {
-            yaml_err_msg(*expected_state, s->state);
-            return FAILURE;
-        }
-        switch (event->type) {
-        case YAML_SCALAR_EVENT:
-            if (s->host.mac_addr.addr[0]) {
-                LOG_WARNING_PREFIX("duplicate 'host_mac' key.\n");
-            }
-            char *mac_addr_str = panic_strdup((char *)event->data.scalar.value);
-            if (parse_mac_addr(&s->host.mac_addr, mac_addr_str) != EXIT_SUCCESS) {
-                LOG_ERROR_PREFIX("Incorrect MAC address: %s.\n", mac_addr_str);
-                return FAILURE;
-            }
-            free(mac_addr_str);
             s->state = STATE_HOSTKEYS;
             break;
         default:

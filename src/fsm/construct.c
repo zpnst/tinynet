@@ -22,8 +22,6 @@ push_rib(net_graph_t *graph, size_t src, size_t dest, __uint8_t weight)
     
     new_node->basic_info.dev_name = (char *)panic_strdup(graph->adjacency_list[dest]->basic_info.dev_name);
     new_node->basic_info.dev_type = graph->adjacency_list[dest]->basic_info.dev_type;
-    new_node->basic_info.ip_addr = graph->adjacency_list[dest]->basic_info.ip_addr;
-    new_node->basic_info.mac_addr = graph->adjacency_list[dest]->basic_info.mac_addr;
 
     new_node->weight = weight;
 
@@ -37,7 +35,7 @@ push_rib(net_graph_t *graph, size_t src, size_t dest, __uint8_t weight)
 /** Switches and hosts base topologies. 
  * Bus for switches and tree for hosts as a model */
 static void 
-lanstopology(net_graph_t *graph, parser_state_t *parser_state) 
+lans_topology(net_graph_t *graph, parser_state_t *parser_state) 
 {
     size_t to_switches_frame = graph->rc;
     size_t to_hosts_frame = graph->rc + graph->sc;
@@ -91,7 +89,7 @@ mesh_topology(net_graph_t *graph, parser_state_t *parser_state)
             push_rib(graph, jter, iter, ctx_rand);
         }
     }
-    lanstopology(graph, parser_state);
+    lans_topology(graph, parser_state);
 }
 
 static void 
@@ -103,7 +101,7 @@ ring_topology(net_graph_t *graph, parser_state_t *parser_state)
         push_rib(graph, iter, (iter + 1) % graph->rc, ctx_rand);
         push_rib(graph, (iter + 1) % graph->rc, iter, ctx_rand); 
     }
-    lanstopology(graph, parser_state);
+    lans_topology(graph, parser_state);
 }
 
 static void 
@@ -115,7 +113,7 @@ bus_topology(net_graph_t *graph, parser_state_t *parser_state)
         push_rib(graph, iter, iter + 1, ctx_rand); 
         push_rib(graph, iter + 1, iter, ctx_rand); 
     }
-    lanstopology(graph, parser_state);
+    lans_topology(graph, parser_state);
 }
 
 static void 
@@ -123,8 +121,6 @@ basic_info_deep_copy(adjacency_node_t* dest, abs_dev_t *src)
 {   
     dest->basic_info.dev_name = (char *)panic_strdup(src->basic_info.dev_name);
     dest->basic_info.dev_type = src->basic_info.dev_type;
-    dest->basic_info.ip_addr = src->basic_info.ip_addr;
-    dest->basic_info.mac_addr = src->basic_info.mac_addr;
 }
 
 static net_graph_t *
@@ -205,6 +201,7 @@ graph_by_config(tinynet_conf_t **net_conf)
             break;
     }
 
+
     (*net_conf) = (tinynet_conf_t *)panic_alloc(sizeof(tinynet_conf_t));
 
     (*net_conf)->net_type = parser_state->net_conf_type;
@@ -213,7 +210,7 @@ graph_by_config(tinynet_conf_t **net_conf)
 
     (*net_conf)->net_graph = graph;
     (*net_conf)->hops_matrix = NULL;
-
+    
     destroy_parser_state(parser_state);
 
     return EXIT_SUCCESS;
@@ -226,6 +223,7 @@ add_router(abs_dev_t **routers, device_e router_type, dev_basic_info_t router_bi
     abs_dev_t *router = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     router->basic_info = router_binf;
+    printf("add rout: %s\n", router_binf.dev_name);
     router->basic_info.dev_type = router_type;
 
     router->lower_devs_list = lans_list;
@@ -248,6 +246,7 @@ add_switch(abs_dev_t **switches, device_e switch_type, dev_basic_info_t switch_b
     abs_dev_t *switch_ = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     switch_->basic_info = switch_binf;
+    printf("add swi: %s\n", switch_binf.dev_name);
     switch_->basic_info.dev_type = switch_type;
 
     switch_->lower_devs_list = hosts_list;
@@ -271,6 +270,7 @@ add_host(abs_dev_t **hosts, device_e host_type, dev_basic_info_t host_binf)
     abs_dev_t *host = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     host->basic_info = host_binf;
+    printf("add host: %s\n", host_binf.dev_name);
     host->basic_info.dev_type = host_type;
 
     /* Append to list. */
@@ -390,8 +390,9 @@ destroy_parser_state(parser_state_t *parser_state)
 
     safety_free(parser_state->net_conf_name);
     safety_free(parser_state->net_conf_description);
-
+    
     destroy_wans_list(parser_state->wans_list);
+    
     destroy_wans_list(parser_state->lans_list);
     destroy_wans_list(parser_state->host_list);
     

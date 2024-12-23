@@ -72,7 +72,7 @@ floyd_warshall(tinynet_conf_t *net_conf)
     for (size_t iter = 0; iter < vertex; iter += 1) {
         for (size_t jter = 0; jter < vertex; jter += 1) {
             if (dist[iter][jter] == INT_MAX) {
-                panic("incorrect path");
+                panic("incorrect path B");
             } else {
                 hops_matrix[iter][jter].weight = dist[iter][jter];
             }

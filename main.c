@@ -16,7 +16,7 @@ const char *dot_file = "conf/data/net.dot";
 
 int 
 main(void) 
-{
+{   
     tinynet_conf_t *network = NULL;
     int err = graph_by_config(&network);
     if (err != EXIT_SUCCESS) {
@@ -25,7 +25,7 @@ main(void)
     }
 
     dump_net_links(network, ENANBLE_NET_INFO); printf("\n");
-    build_viz_file(network, dot_file, DONT_SHOW_IP, DONT_SHOW_MAC);
+    build_viz_file(network, dot_file);
 
     floyd_warshall(network);
 

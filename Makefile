@@ -7,7 +7,6 @@ NET_DIR = $(SRC_DIR)/net
 VIZ_DIR = $(SRC_DIR)/viz
 
 DEVICES_DIR = $(NET_DIR)/devices
-NETMAN_DIR = $(NET_DIR)/netman
 ADDR_DIR = $(NET_DIR)/addr
 
 GVC_DYNIB = gvc 
@@ -19,10 +18,10 @@ DEBUG_TARGET = debug_tinynet
 
 SRCS = $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard $(VIZ_DIR)/*.c) \
+	   $(wildcard $(NET_DIR)/*.c) \
 	   $(wildcard $(ALG_DIR)/*.c) \
 	   $(wildcard $(FSM_DIR)/*.c) \
 	   $(wildcard $(DEVICES_DIR)/*.c) \
-	   $(wildcard $(NETMAN_DIR)/*.c) \
 	   $(wildcard $(ADDR_DIR)/*.c) \
        main.c
 

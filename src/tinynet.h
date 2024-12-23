@@ -7,23 +7,11 @@
 
 #define YAML_DOC_TITLE "tinynet"
 
-#define SHOW_IP 1
-#define DONT_SHOW_IP 0
-
-#define SHOW_MAC 1
-#define DONT_SHOW_MAC 0
-
 #define ENANBLE_NET_INFO 1
 #define DISABLE_NET_INFO 0
 
 #define ENANBLE_NET_INFO 1
 #define DISABLE_NET_INFO 0
-
-/** Длина MAC-адреса. */
-#define MAC_ADDRSTRLEN 6
-
-#define IP_BUFFER_S 19
-#define MAC_BUFFER_S 18
 
 #define NET_T_BUFFER_S 5
 #define DEVICE_T_BUFFER_S 7
@@ -62,28 +50,11 @@ typedef enum net_types_s {
     BUS_NET_T,
 } net_types_e;
 
-// utils
-
-/** Тип IP-адреса. */
-typedef struct ip_addr_s {
-    __uint32_t addr; 
-    __uint8_t mask;  
-} ip_addr_t;
-
-/** Тип MAC-адреса. */
-typedef struct mac_addr_s {
-    __uint8_t addr[MAC_ADDRSTRLEN]; 
-} mac_addr_t;
-
-// devices
 
 /** Базовая инфоомация об устройсте. */
 typedef struct dev_basic_info_s {
     device_e dev_type;
     char *dev_name;
-
-    ip_addr_t ip_addr;
-    mac_addr_t mac_addr;
 } dev_basic_info_t;
 
 /** Абстрактное устройство. */
@@ -161,8 +132,6 @@ typedef enum machine_states_e {
     STATE_WANKEYS,  
 
     STATE_ROUTERNAME,  
-    STATE_ROUTERIP, 
-    STATE_ROUTERMAC, 
     STATE_LANLIST,  
  
     /** Switches states */
@@ -170,8 +139,6 @@ typedef enum machine_states_e {
     STATE_LANKEYS, 
 
     STATE_SWITCHNAME, 
-    STATE_SWITCHIP,
-    STATE_SWITCHMAC, 
     STATE_HOSTSLIST,
 
     /** Host states */
@@ -179,8 +146,6 @@ typedef enum machine_states_e {
     STATE_HOSTKEYS, 
 
     STATE_HOSTNAME,
-    STATE_HOSTIP,
-    STATE_HOSTMAC,
 
     /** End state */
     STATE_STOP     

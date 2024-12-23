@@ -4,8 +4,6 @@
 
 #include "src/sys.h"  
 #include "src/tinynet.h"  
-#include "src/net/addr/ip.h"
-#include "src/net/addr/mac.h"
 
 #define DEV_WEIGHT_BUFFER_S 3
 #define DEV_NAME_BUFFER_S 128
@@ -57,7 +55,7 @@ get_topology_type_string(net_types_e net_type)
 }
 
 int 
-build_viz_file(tinynet_conf_t *conf, const char *filename, int show_ip, int show_mac) 
+build_viz_file(tinynet_conf_t *conf, const char *filename) 
 {
     FILE *fp = fopen(filename, "w");
     if (!fp) {
@@ -93,19 +91,6 @@ build_viz_file(tinynet_conf_t *conf, const char *filename, int show_ip, int show
 
         char dev_label[DEV_DOT_LABEL_BUFFER_S];
         snprintf(dev_label, sizeof(dev_label), "%s", dev_name);
-
-        if (show_ip) {
-            char ip_buffer[IP_BUFFER_S];
-            ip_addr_to_string(&ctx->basic_info.ip_addr, ip_buffer, IP_BUFFER_S);
-            strncat(dev_label, "\\nIP: ", sizeof(dev_label) - strlen(dev_label) - 1);
-            strncat(dev_label, ip_buffer, sizeof(dev_label) - strlen(dev_label) - 1);
-        }
-        if (show_mac) {
-            char mac_buffer[MAC_BUFFER_S];
-            mac_addr_to_string(&ctx->basic_info.mac_addr, mac_buffer, MAC_BUFFER_S);
-            strncat(dev_label, "\\nMAC: ", sizeof(dev_label) - strlen(dev_label) - 1);
-            strncat(dev_label, mac_buffer, sizeof(dev_label) - strlen(dev_label) - 1);
-        }
 
         fprintf(fp, "    \"%s\" [shape=%s, color=%s, label=\"%s\"];\n", dev_name,
                 get_shape_by_device_type(ctx->basic_info.dev_type),

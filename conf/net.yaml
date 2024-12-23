@@ -1,61 +1,31 @@
 ---
 tinynet:
-  net_type: "ring"
+  net_type: "mesh"
   net_name: "tinynet"
   net_description: "Hello tinynet! The best network mmodel"
   wan_devs:
     - router_name: "router_1"
-      router_ip: "203.0.113.1/24"
-      router_mac: "02:11:22:33:44:55"
       router_lan_devs:
         - switch_name: "switch_11"
-          switch_ip: "203.0.113.30/24"
-          switch_mac: "01:11:22:33:44:77"
           switch_hosts:
             - host_name: "host_111"
-              host_ip: "203.0.113.31/24"
-              host_mac: "10:44:22:33:44:88"
     - router_name: "router_2"
-      router_ip: "142.1.254.1/23"
-      router_mac: "00:12:33:33:44:51"
       router_lan_devs:
         - switch_name: "switch_21"
-          switch_ip: "142.1.254.1/24"
-          switch_mac: "06:11:22:33:44:E7"
           switch_hosts:
             - host_name: "host_211"
-              host_ip: "142.1.254.21/24"
-              host_mac: "07:11:22:33:44:B7"
         - switch_name: "switch_22"
-          switch_ip: "142.1.255.1/24"
-          switch_mac: "08:11:22:33:44:FA"
           switch_hosts:
             - host_name: "host_221"
-              host_ip: "142.1.255.24/24"
-              host_mac: "09:11:22:33:44:B6"
     - router_name: "router_3"
-      router_ip: "203.0.113.1/24"
-      router_mac: "02:11:22:33:44:55"
       router_lan_devs:
         - switch_name: "switch_31"
-          switch_ip: "203.0.113.30/24"
-          switch_mac: "01:11:22:33:44:77"
           switch_hosts:
             - host_name: "host_311"
-              host_ip: "203.0.113.31/24"
-              host_mac: "10:44:22:33:44:88"
     - router_name: "router_4"
-      router_ip: "203.0.113.1/24"
-      router_mac: "02:11:22:33:44:55"
       router_lan_devs:
         - switch_name: "switch_41"
-          switch_ip: "203.0.113.30/24"
-          switch_mac: "01:11:22:33:44:77"
           switch_hosts:
             - host_name: "host_411"
-              host_ip: "203.0.113.31/24"
-              host_mac: "10:44:22:33:44:88"
             - host_name: "host_412"
-              host_ip: "203.0.113.31/24"
-              host_mac: "10:44:22:33:44:88"
 ...
