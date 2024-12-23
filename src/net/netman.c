@@ -186,10 +186,11 @@ init_tinynet(tinynet_conf_t **network)
 
 static void 
 dump_info(tinynet_conf_t *network) 
-{
-    dump_net_links(network, ENANBLE_NET_INFO); printf("\n");
+{   
+    dump_to_png();
     dump_shortest_hops(network); printf("\n");
     dump_ros_tables(network); printf("\n");
+    dump_net_links(network, ENANBLE_NET_INFO); printf("\n");
 }
 
 static void 
@@ -202,6 +203,7 @@ print_help_info() {
     printf("    4) quit     --> quit manager\n");
     printf("    5) dump     --> dump info\n");
     printf("    6) help     --> print help info\n");
+    printf("    7) clear    --> clear terminal output\n");
     printf("----------------------------------\n");
 }
 
@@ -215,6 +217,8 @@ netman_start(tinynet_conf_t **network)
         free(network);
         return EXIT_FAILURE;
     }
+
+    int if_cmd_down = 0;
 
     print_help_info();
 
@@ -236,12 +240,15 @@ netman_start(tinynet_conf_t **network)
             break;
         } else if (strcmp(line, "dump") == 0) {
             dump_info(*network);
+        } else if (strcmp(line, "clear") == 0) {
+            system("clear");
         } else if (strcmp(line, "help") == 0) {
             print_help_info();
         } else if (strcmp(line, "net up") == 0) {
             net_up(*network);
         } else if (strcmp(line, "net down") == 0) {
             net_down();
+            if_cmd_down = 1;
             destroy_net_conf(*network);
         } else if (strncmp(line, "send ", 5) == 0) {
         
@@ -273,7 +280,8 @@ netman_start(tinynet_conf_t **network)
         }
     }
     net_down();
-    destroy_net_conf(*network);
-
+    if (if_cmd_down == 0) {
+        destroy_net_conf(*network);
+    }
     return 0;
 }

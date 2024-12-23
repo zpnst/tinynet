@@ -226,6 +226,15 @@ add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int3
     safety_free(ctx_path);
 }
 
+void
+dump_to_png() {
+    const char* cmd = "dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot";
+    int ret = system(cmd);
+    if (ret != 0) {
+        panic("system(cmd)");
+    }
+}
+
 void 
 dump_shortest_hops(tinynet_conf_t *network)
 {

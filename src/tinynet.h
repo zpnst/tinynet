@@ -198,6 +198,9 @@ reconstruct_path(tinynet_conf_t *network, __int32_t iter, __int32_t jter);
 void 
 init_ros_tables(tinynet_conf_t *network);
 
+void
+dump_to_png();
+
 void 
 dump_shortest_hops(tinynet_conf_t *network);
 
