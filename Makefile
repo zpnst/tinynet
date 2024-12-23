@@ -6,9 +6,6 @@ ALG_DIR = $(SRC_DIR)/alg
 NET_DIR = $(SRC_DIR)/net
 VIZ_DIR = $(SRC_DIR)/viz
 
-DEVICES_DIR = $(NET_DIR)/devices
-ADDR_DIR = $(NET_DIR)/addr
-
 GVC_DYNIB = gvc 
 YAML_DYNLIB = yaml
 GRAPH_DYNLIB = cgraph
@@ -21,8 +18,6 @@ SRCS = $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard $(NET_DIR)/*.c) \
 	   $(wildcard $(ALG_DIR)/*.c) \
 	   $(wildcard $(FSM_DIR)/*.c) \
-	   $(wildcard $(DEVICES_DIR)/*.c) \
-	   $(wildcard $(ADDR_DIR)/*.c) \
        main.c
 
 CC = clang
@@ -52,6 +47,7 @@ viz:
 	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
 
 vrun: all
+	@clang $(NET_DIR)/dev/dev.c -o $(NET_DIR)/dev/bin/xdev
 	@./$(BIN_DIR)/$(TARGET)
 	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
 

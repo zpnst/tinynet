@@ -169,6 +169,8 @@ void
 add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int32_t kter)
 {
 
+    size_t start_hosts = network->net_graph->rc + network->net_graph->sc;
+
     if (if_dest_exists(network, jter, kter)) {
         return;
     }
@@ -192,10 +194,18 @@ add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int3
 
     __int32_t next_hop_index = ctx_path[ctx_position + 1];
 
+    int err;
     char ros_entry_buffer[ROS_ENTRY_BUFFER_S];
-    int err = snprintf(ros_entry_buffer, sizeof(ros_entry_buffer), "<%s>:<%s>",
-                       get_device_name_by_index(network, jter),
-                       get_device_name_by_index(network, next_hop_index));
+
+    if (kter < (__int32_t)start_hosts) {
+        err = snprintf(ros_entry_buffer, sizeof(ros_entry_buffer), "%s:%s",
+                    get_device_name_by_index(network, jter),
+                    get_device_name_by_index(network, next_hop_index));
+    } else {
+        err = snprintf(ros_entry_buffer, sizeof(ros_entry_buffer), "__all__:%s",
+            get_device_name_by_index(network, next_hop_index));
+    }
+
     if (err < 0) {
         panic("snprintf ros_tables_list init err");
     }
@@ -245,7 +255,7 @@ init_ros_tables(tinynet_conf_t *network)
         network->ros_tables_list[i] = NULL;
     }
 
-    for (size_t kter = 0; kter < start_hosts; kter += 1) {
+    for (size_t kter = 0; kter < dev_c; kter += 1) {
         for (size_t iter = start_hosts; iter < end_hosts; iter += 1) {
             for (size_t jter = start_hosts; jter < end_hosts; jter += 1) {
                 if (iter == jter) continue;
@@ -259,21 +269,143 @@ void
 dump_ros_tables(tinynet_conf_t *network)
 {
     char_node_t **ros_tables_list = network->ros_tables_list;
+    size_t start_hosts = network->net_graph->rc + network->net_graph->sc;
     
-    for (size_t iter = 0; iter < network->net_graph->rc + network->net_graph->sc; iter += 1) {
+    for (size_t iter = 0; iter < network->net_graph->rc + network->net_graph->sc + network->net_graph->hc; iter += 1) {
         
-        char_node_t *ctx = ros_tables_list[iter];
-        printf("%s ros table:\n", get_device_name_by_index(network, iter));
+        if (iter < start_hosts) {
+            char_node_t *ctx = ros_tables_list[iter];
+            printf("%s ros table:\n", get_device_name_by_index(network, iter));
 
-        size_t jter = 1;
-        while (ctx) {
-            printf("\t%zu) - %s\n", jter, ctx->entry);
+            size_t jter = 1;
+            while (ctx) {
+                printf("\t%zu) - %s\n", jter, ctx->entry);
 
-            ctx = ctx->next;
-            jter += 1;
+                ctx = ctx->next;
+                jter += 1;
+            }
+
+            printf("\n");
+        } else {
+            printf("%s ros table:\n", get_device_name_by_index(network, iter));
+            printf("\t%d) - %s\n", 1, ros_tables_list[iter]->entry);
+            printf("\n");  
         }
-
-        printf("\n");
+       
     }
     
+}
+
+void
+destroy_net_graph(tinynet_conf_t *net_conf) 
+{   
+    net_graph_t *graph = net_conf->net_graph;
+    size_t dev_c = graph->rc + graph->sc + graph->hc;
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
+
+        adjacency_node_t *current_node = graph->adjacency_list[iter];
+
+        while (current_node) {
+            adjacency_node_t *next_node = current_node->next;
+
+           if (current_node->basic_info.dev_name) {
+                safety_free(current_node->basic_info.dev_name);
+            }
+            safety_free(current_node);
+            current_node = next_node;
+        } 
+    }
+    safety_free(graph->adjacency_list);
+    safety_free(graph);
+}
+
+void 
+destory_hops_matrix(tinynet_conf_t *net_conf)
+{
+    size_t vertex = get_device_count(net_conf);
+
+    for (size_t iter = 0; iter < vertex; iter += 1) {
+        safety_free(net_conf->hops_matrix[iter]);
+    }
+    safety_free(net_conf->hops_matrix);
+}
+
+void 
+destroy_ros_tables(tinynet_conf_t *net_conf) {
+    size_t dev_c = get_device_count(net_conf);
+
+    for (size_t iter = 0; iter < dev_c; iter += 1) {
+        char_node_t *curr = net_conf->ros_tables_list[iter];
+        while (curr) {
+            char_node_t *tmp = curr->next;
+            safety_free(curr->entry);
+            safety_free(curr);
+            curr = tmp;
+        }
+    }
+    safety_free(net_conf->ros_tables_list);
+    net_conf->ros_tables_list = NULL;
+}
+
+
+void
+destroy_net_conf(tinynet_conf_t *net_conf)
+{   
+    safety_free(net_conf->net_name);
+    safety_free(net_conf->net_description);
+
+    destory_hops_matrix(net_conf);
+    destroy_ros_tables(net_conf);
+    destroy_net_graph(net_conf);
+
+    safety_free(net_conf);
+
+}
+
+void 
+destroy_wans_list(abs_dev_t *wans_list) 
+{
+    abs_dev_t *wan = wans_list;
+
+    while (wan) {
+        abs_dev_t *wan_next = wan->next;
+        safety_free(wan->basic_info.dev_name);
+        abs_dev_t *lan = wan->lower_devs_list;
+
+        while (lan) {
+            abs_dev_t *lan_next = lan->next;
+            safety_free(lan->basic_info.dev_name);
+            abs_dev_t *host = lan->lower_devs_list;
+
+            while (host) {
+                abs_dev_t *host_next = host->next;
+                safety_free(host->basic_info.dev_name);
+                safety_free(host);
+                host = host_next;
+            }
+            safety_free(lan);
+            lan = lan_next;
+        }
+        safety_free(wan);
+        wan = wan_next;
+    }
+}
+
+void 
+destroy_parser_state(parser_state_t *parser_state) 
+{   
+    
+    safety_free(parser_state->host.dev_name); 
+    safety_free(parser_state->switch_.dev_name);
+    safety_free(parser_state->router.dev_name);
+
+    safety_free(parser_state->net_conf_name);
+    safety_free(parser_state->net_conf_description);
+    
+    destroy_wans_list(parser_state->wans_list);
+    
+    destroy_wans_list(parser_state->lans_list);
+    destroy_wans_list(parser_state->host_list);
+    
+    safety_free(parser_state);
 }

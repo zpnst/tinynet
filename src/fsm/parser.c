@@ -252,7 +252,6 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_MAPPING_END_EVENT:
 
             /** Append new router because mapping end */
-            printf("Append new router because mapping end: %s\n", s->router.dev_name);
             add_router(&s->wans_list, ROUTER_T, s->router, s->lans_list);
 
             /** safety_free buffer */
@@ -342,7 +341,6 @@ handle_event(parser_state_t *s, yaml_event_t *event, machine_states_t *expected_
         case YAML_MAPPING_END_EVENT:
 
             /** Append new switch because mapping end */
-            printf("Append new switch because mapping end: %s\n", s->switch_.dev_name);
             add_switch(&s->lans_list, SWITCH_T, s->switch_, s->host_list);
 
             /** safety_free buffers*/

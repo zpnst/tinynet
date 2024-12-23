@@ -223,7 +223,6 @@ add_router(abs_dev_t **routers, device_e router_type, dev_basic_info_t router_bi
     abs_dev_t *router = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     router->basic_info = router_binf;
-    printf("add rout: %s\n", router_binf.dev_name);
     router->basic_info.dev_type = router_type;
 
     router->lower_devs_list = lans_list;
@@ -246,7 +245,6 @@ add_switch(abs_dev_t **switches, device_e switch_type, dev_basic_info_t switch_b
     abs_dev_t *switch_ = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     switch_->basic_info = switch_binf;
-    printf("add swi: %s\n", switch_binf.dev_name);
     switch_->basic_info.dev_type = switch_type;
 
     switch_->lower_devs_list = hosts_list;
@@ -270,7 +268,6 @@ add_host(abs_dev_t **hosts, device_e host_type, dev_basic_info_t host_binf)
     abs_dev_t *host = (abs_dev_t *)panic_alloc(sizeof(abs_dev_t));
 
     host->basic_info = host_binf;
-    printf("add host: %s\n", host_binf.dev_name);
     host->basic_info.dev_type = host_type;
 
     /* Append to list. */
@@ -285,116 +282,3 @@ add_host(abs_dev_t **hosts, device_e host_type, dev_basic_info_t host_binf)
     }
 }
 
-void
-destroy_net_graph(tinynet_conf_t *net_conf) 
-{   
-    net_graph_t *graph = net_conf->net_graph;
-    size_t dev_c = graph->rc + graph->sc + graph->hc;
-    for (size_t iter = 0; iter < dev_c; iter += 1) {
-
-        adjacency_node_t *current_node = graph->adjacency_list[iter];
-
-        while (current_node) {
-            adjacency_node_t *next_node = current_node->next;
-
-           if (current_node->basic_info.dev_name) {
-                safety_free(current_node->basic_info.dev_name);
-            }
-            safety_free(current_node);
-            current_node = next_node;
-        } 
-    }
-    safety_free(graph->adjacency_list);
-    safety_free(graph);
-}
-
-void 
-destory_hops_matrix(tinynet_conf_t *net_conf)
-{
-    size_t vertex = get_device_count(net_conf);
-
-    for (size_t iter = 0; iter < vertex; iter += 1) {
-        safety_free(net_conf->hops_matrix[iter]);
-    }
-    safety_free(net_conf->hops_matrix);
-}
-
-void 
-destroy_ros_tables(tinynet_conf_t *net_conf) {
-    size_t dev_c = get_device_count(net_conf);
-
-    for (size_t iter = 0; iter < dev_c; iter += 1) {
-        char_node_t *curr = net_conf->ros_tables_list[iter];
-        while (curr) {
-            char_node_t *tmp = curr->next;
-            safety_free(curr->entry);
-            safety_free(curr);
-            curr = tmp;
-        }
-    }
-    safety_free(net_conf->ros_tables_list);
-    net_conf->ros_tables_list = NULL;
-}
-
-
-void
-destroy_net_conf(tinynet_conf_t *net_conf)
-{   
-    safety_free(net_conf->net_name);
-    safety_free(net_conf->net_description);
-
-    destory_hops_matrix(net_conf);
-    destroy_ros_tables(net_conf);
-    destroy_net_graph(net_conf);
-
-    safety_free(net_conf);
-
-}
-
-void 
-destroy_wans_list(abs_dev_t *wans_list) 
-{
-    abs_dev_t *wan = wans_list;
-
-    while (wan) {
-        abs_dev_t *wan_next = wan->next;
-        safety_free(wan->basic_info.dev_name);
-        abs_dev_t *lan = wan->lower_devs_list;
-
-        while (lan) {
-            abs_dev_t *lan_next = lan->next;
-            safety_free(lan->basic_info.dev_name);
-            abs_dev_t *host = lan->lower_devs_list;
-
-            while (host) {
-                abs_dev_t *host_next = host->next;
-                safety_free(host->basic_info.dev_name);
-                safety_free(host);
-                host = host_next;
-            }
-            safety_free(lan);
-            lan = lan_next;
-        }
-        safety_free(wan);
-        wan = wan_next;
-    }
-}
-
-void 
-destroy_parser_state(parser_state_t *parser_state) 
-{   
-    
-    safety_free(parser_state->host.dev_name); 
-    safety_free(parser_state->switch_.dev_name);
-    safety_free(parser_state->router.dev_name);
-
-    safety_free(parser_state->net_conf_name);
-    safety_free(parser_state->net_conf_description);
-    
-    destroy_wans_list(parser_state->wans_list);
-    
-    destroy_wans_list(parser_state->lans_list);
-    destroy_wans_list(parser_state->host_list);
-    
-    safety_free(parser_state);
-}

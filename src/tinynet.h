@@ -151,6 +151,29 @@ typedef enum machine_states_e {
     STATE_STOP     
 } machine_states_t;
 
+/** parser state. */
+typedef struct parser_state_s {
+    char *net_conf_name;           /** Master network configuration name. */
+    char *net_conf_description;    /** Master network configuration description. */
+    net_types_e net_conf_type;               /** Master network configuration type. */
+
+    machine_states_t state;                   /** The current parse state */
+
+    dev_basic_info_t host;                    /** Host buffer. */
+    dev_basic_info_t switch_;                 /** LAN(switch) buffer. */
+    dev_basic_info_t router;                  /** WAN(router) buffer. */
+
+    size_t rout_c;                            /** Number of routers. */
+    size_t swit_c;                            /** Number of switches. */
+    size_t host_c;                            /** Number of hosts. */
+
+    abs_dev_t *host_list;                     /** Temporary buffer for each LAN. */
+    abs_dev_t *lans_list;                     /** Temporary buffer for each WAN. */
+    
+    abs_dev_t *wans_list;                     /** Master list of WANs. */
+
+} parser_state_t;
+
 void 
 dump_net_links(tinynet_conf_t *network, __int32_t enable_net_info);
 
@@ -183,5 +206,14 @@ dump_ros_tables(tinynet_conf_t *network);
 
 void 
 add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int32_t kter);
+
+void 
+destroy_parser_state(parser_state_t *state);
+
+void 
+destory_hops_matrix(tinynet_conf_t *net_conf);
+
+void 
+destroy_wans_list(abs_dev_t *wans_list);
 
 #endif /** TINYNET_H */
