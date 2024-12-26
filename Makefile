@@ -41,14 +41,10 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(SRCS)
 	@echo "Built debug target: $@"
 
 run: all
+	@clang $(NET_DIR)/dev/dev.c -o $(NET_DIR)/dev/bin/xdev
 	@./$(BIN_DIR)/$(TARGET)
 
 viz:
-	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
-
-vrun: all
-	@clang $(NET_DIR)/dev/dev.c -o $(NET_DIR)/dev/bin/xdev
-	@./$(BIN_DIR)/$(TARGET)
 	@dot -Tpng -o ./conf/image/net.png ./conf/data/net.dot
 
 run_debug: debug

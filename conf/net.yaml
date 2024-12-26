@@ -2,7 +2,7 @@
 tinynet:
   net_type: "mesh"
   net_name: "tinynet"
-  net_description: "Hello tinynet! The best network mmodel"
+  net_description: "Hello tinynet! The best network model"
   wan_devs:
     - router_name: "router_1"
       router_lan_devs:
@@ -22,10 +22,10 @@ tinynet:
         - switch_name: "switch_31"
           switch_hosts:
             - host_name: "host_311"
-    - router_name: "router_4"
-      router_lan_devs:
-        - switch_name: "switch_41"
-          switch_hosts:
-            - host_name: "host_411"
-            - host_name: "host_412"
+            - host_name: "host_312"
+            - host_name: "host_313"
+            - host_name: "host_314"
 ...
+
+
+

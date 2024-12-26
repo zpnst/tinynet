@@ -15,9 +15,8 @@
 #include "src/alg/fw.h"
 #include "src/viz/viz.h"
 #include "src/fsm/construct.h"
+#include "src/net/netman.h"
 
-#define FPATH_S 256 
-#define TRACE_BUFFER_S 4096
 #define SOCKDIR "/tmp/tinynet"
 
 static const char *DOT_FILE    = "conf/data/net.dot";
@@ -32,8 +31,6 @@ typedef struct device_info_s {
 
 static device_info_t *g_devices = NULL; 
 static size_t         g_dev_count = 0;
-
-
 
 static int 
 send_command_to_host(const char *host_name, const char *cmd_line)
@@ -82,20 +79,20 @@ net_up(tinynet_conf_t *network)
                 + network->net_graph->sc 
                 + network->net_graph->hc;
 
-    g_devices = calloc(g_dev_count, sizeof(device_info_t));
+    g_devices = (device_info_t *)calloc(g_dev_count, sizeof(device_info_t));
     if (!g_devices) {
         perror("calloc g_devices");
         return -1;
     }
 
-    for (size_t i = 0; i < g_dev_count; i++) {
-        const char *dev_name = get_device_name_by_index(network, i);
-        strncpy(g_devices[i].name, dev_name, sizeof(g_devices[i].name)-1);
+    for (size_t iter = 0; iter < g_dev_count; iter += 1) {
+        const char *dev_name = get_device_name_by_index(network, iter);
+        strncpy(g_devices[iter].name, dev_name, sizeof(g_devices[iter].name)-1);
 
         char routes_buf[TRACE_BUFFER_S];
         routes_buf[0] = '\0';
 
-        char_node_t *table_node = network->ros_tables_list[i];
+        char_node_t *table_node = network->ros_tables_list[iter];
         while (table_node) {
             strcat(routes_buf, table_node->entry);
             table_node = table_node->next;
@@ -123,7 +120,7 @@ net_up(tinynet_conf_t *network)
             exit(EXIT_FAILURE);
         } 
         else {
-            g_devices[i].pid = pid;
+            g_devices[iter].pid = pid;
         }
     }
     sleep(1);
@@ -140,23 +137,23 @@ net_down(void)
         return;
     }
 
-    for (size_t i = 0; i < g_dev_count; i++) {
-        kill(g_devices[i].pid, SIGTERM); 
+    for (size_t iter = 0; iter < g_dev_count; iter += 1) {
+        kill(g_devices[iter].pid, SIGTERM); 
     }
 
-    for (size_t i = 0; i < g_dev_count; i++) {
+    for (size_t iter = 0; iter < g_dev_count; iter += 1) {
         int status;
-        waitpid(g_devices[i].pid, &status, 0);
+        waitpid(g_devices[iter].pid, &status, 0);
         if (WIFEXITED(status)) {
             int code = WEXITSTATUS(status);
             printf("[manager] Device %s (pid=%d) exited with code %d\n",
-                   g_devices[i].name,
-                   (int)g_devices[i].pid,
+                   g_devices[iter].name,
+                   (int)g_devices[iter].pid,
                    code);
         } else {
             printf("[manager] Device %s (pid=%d) terminated abnormally\n",
-                   g_devices[i].name,
-                   (int)g_devices[i].pid);
+                   g_devices[iter].name,
+                   (int)g_devices[iter].pid);
         }
     }
 
@@ -198,8 +195,8 @@ print_help_info() {
     printf("Network Manager of tinynet is ready <%d>.\n", getpid());
     printf("Commands:\n");
     printf("    1) net up   --> start all net processes\n");
-    printf("    2) send     --> send message from host to host, fromat: <src> <dest> <msg>\n");
-    printf("    3) net down --> kill all net processes\n");
+    printf("    2) net down --> kill all net processes\n");
+    printf("    3) send     --> send message from host to host, fromat: <src> <dest> <msg>\n");
     printf("    4) quit     --> quit manager\n");
     printf("    5) dump     --> dump info\n");
     printf("    6) help     --> print help info\n");
@@ -218,7 +215,7 @@ netman_start(tinynet_conf_t **network)
         return EXIT_FAILURE;
     }
 
-    int if_cmd_down = 0;
+    int cmd_down = 0;
 
     print_help_info();
 
@@ -246,26 +243,27 @@ netman_start(tinynet_conf_t **network)
             print_help_info();
         } else if (strcmp(line, "net up") == 0) {
             net_up(*network);
+            cmd_down = 1;
         } else if (strcmp(line, "net down") == 0) {
             net_down();
-            if_cmd_down = 1;
-            destroy_net_conf(*network);
+            cmd_down = 2;
         } else if (strncmp(line, "send ", 5) == 0) {
         
-            char cmd[16], host_src[64], host_dst[64], msg[512];
+            char cmd[BUFFERFI_S], host_src[BUFFERFI_S], host_dst[BUFFERFI_S], msg[MSG_BUFFER_S];
             memset(cmd, 0, sizeof(cmd));
             memset(host_src, 0, sizeof(host_src));
             memset(host_dst, 0, sizeof(host_dst));
             memset(msg, 0, sizeof(msg));
 
-            int n = sscanf(line, "%15s %63s %63s %511[^\n]",
+            int n = sscanf(line, "%127s %127s %127s %1023[^\n]",
                            cmd, host_src, host_dst, msg);
             if (n < 4) {
                 printf("Usage: send <host_src> <host_dst> <message>\n");
                 continue;
             }
 
-            char command_str[600];
+            char command_str[MSG_BUFFER_S + (BUFFERFI_S * 3)];
+            
             snprintf(command_str, sizeof(command_str),
                      "SEND TO %s MSG %s", host_dst, msg);
 
@@ -279,9 +277,11 @@ netman_start(tinynet_conf_t **network)
             printf("Unknown command: %s\n", line);
         }
     }
-    net_down();
-    if (if_cmd_down == 0) {
-        destroy_net_conf(*network);
+    
+    if (cmd_down == 1) {
+        net_down();
     }
+    destroy_net_conf(*network);
+    
     return 0;
 }

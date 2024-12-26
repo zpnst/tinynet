@@ -19,7 +19,6 @@ is_host_device(const char *node_name)
     return 0;
 }
 
-
 static void 
 log_message_to_file(const char *node_name, const char *message, const char *header)
 {
@@ -55,7 +54,8 @@ find_next_hop(route_entry_t *table, const char *dest)
     return NULL;
 }
 
-static void pdu_serializator(void *dest, void *src, pdu_serializator_t mode)
+static void 
+pdu_serializator(void *dest, void *src, pdu_serializator_t mode)
 {
     __uint32_t offset;
     for (__uint32_t iter = 0; iter < BASEFI_COUNT; iter += 1) {
@@ -121,13 +121,14 @@ parse_routes(const char *routes_str)
     route_entry_t *head = NULL;
     route_entry_t *tail = NULL;
 
-    char *saveptr;
-    char *token = strtok_r(copy, ";", &saveptr);
+    char *tmp;
+
+    char *token = strtok_r(copy, ";", &tmp);
     while (token) {
         char *colon = strchr(token, ':');
         if (!colon) {
             fprintf(stderr, "[node] parse_routes: invalid '%s'\n", token);
-            token = strtok_r(NULL, ";", &saveptr);
+            token = strtok_r(NULL, ";", &tmp);
             continue;
         }
         *colon = '\0';
@@ -149,7 +150,7 @@ parse_routes(const char *routes_str)
             tail->next = entry;
             tail = entry;
         }
-        token = strtok_r(NULL, ";", &saveptr);
+        token = strtok_r(NULL, ";", &tmp);
     }
 
     free(copy);
@@ -157,27 +158,27 @@ parse_routes(const char *routes_str)
 }
 
 static void 
-handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_host, const char *rx_data)
+handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_host, const char *payload)
 {
-    // Fromn network manager
-    if (strncmp(rx_data, "SEND TO ", 8) == 0) {
+    if (strncmp(payload, "SEND TO ", 8) == 0) {
         char dest[BUFFERFI_S];
         char msg[MSG_BUFFER_S];
         memset(dest, 0, sizeof(dest));
         memset(msg, 0, sizeof(msg));
-        const char *ptr = rx_data + 8; 
+
+        const char *ptr = payload + 8; 
 
         int scanned = sscanf(ptr, "%127s MSG %1023[^\n]", dest, msg);
         if (scanned < 2) {
-            printf("[%s] Invalid command: %s\n", node_name, rx_data);
+            printf("[%s] Invalid command: %s\n", node_name, payload);
             return;
         }
 
         tinynet_pdu_t pdu;
         memset(&pdu, 0, sizeof(pdu));
-        strncpy(pdu.src, node_name, BUFFERFI_S-1);
-        strncpy(pdu.dest, dest, BUFFERFI_S-1);
-        strncpy(pdu.compr_msg, msg, MSG_BUFFER_S-1);
+        strncpy(pdu.src, node_name, BUFFERFI_S);
+        strncpy(pdu.dest, dest, BUFFERFI_S);
+        strncpy(pdu.compr_msg, msg, MSG_BUFFER_S);
 
         snprintf(pdu.trace_buf, sizeof(pdu.trace_buf), "<%s --> ", node_name);
 
@@ -186,7 +187,7 @@ handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_ho
             printf("[%s] No route to %s\n", node_name, dest);
             return;
         }
-        strncpy(pdu.next_hop, nh, BUFFERFI_S-1);
+        strncpy(pdu.next_hop, nh, BUFFERFI_S);
 
         printf("[%s] Forwarding new message '%s' to %s via %s\n",
                node_name, msg, dest, pdu.next_hop);
@@ -194,7 +195,7 @@ handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_ho
     } else {
         tinynet_pdu_t inPDU;
         memset(&inPDU, 0, sizeof(inPDU));
-        pdu_serializator(&inPDU, (void*)rx_data, DESEREALIZE_T);
+        pdu_serializator(&inPDU, (void*)payload, DESEREALIZE_T);
 
         strncat(inPDU.trace_buf, node_name, TRACE_BUFFER_S - strlen(inPDU.trace_buf) - 1);
 
@@ -217,7 +218,7 @@ handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_ho
             if (!nh) {
                 printf("[%s] No route for %s\n", node_name, inPDU.dest);
             } else {
-                strncpy(inPDU.next_hop, nh, BUFFERFI_S-1);
+                strncpy(inPDU.next_hop, nh, BUFFERFI_S);
                 printf("[%s] Forwarding PDU to next hop %s\n", node_name, nh);
                 forward_pdu(&inPDU);
             }
@@ -225,7 +226,8 @@ handle_incoming_data(const char *node_name, route_entry_t *route_table,int is_ho
     }
 }
 
-int main(int argc, char *argv[])
+int 
+main(int argc, char *argv[])
 {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <node_name> [route_table]\n", argv[0]);
@@ -233,7 +235,7 @@ int main(int argc, char *argv[])
     }
 
     char node_name[64];
-    strncpy(node_name, argv[1], sizeof(node_name)-1);
+    strncpy(node_name, argv[1], sizeof(node_name));
     node_name[sizeof(node_name)-1] = '\0';
 
     const char *routes_str = (argc >= 3) ? argv[2] : "";
@@ -264,7 +266,7 @@ int main(int argc, char *argv[])
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, sock_path, sizeof(addr.sun_path)-1);
+    strncpy(addr.sun_path, sock_path, sizeof(addr.sun_path));
 
     if (bind(listen_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         perror("[node] bind");
@@ -290,7 +292,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-        char buffer[CMD_BUFFER_S + 1];
+        char buffer[CMD_BUFFER_S];
         memset(buffer, 0, sizeof(buffer));
 
         int ret = read(conn_fd, buffer, CMD_BUFFER_S);

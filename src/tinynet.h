@@ -5,10 +5,9 @@
 
 // #define DEBUG_STATE_MACHINE
 
-#define YAML_DOC_TITLE "tinynet"
+/** CONSTANTS */
 
-#define ENANBLE_NET_INFO 1
-#define DISABLE_NET_INFO 0
+#define YAML_DOC_TITLE "tinynet"
 
 #define ENANBLE_NET_INFO 1
 #define DISABLE_NET_INFO 0
@@ -18,10 +17,13 @@
 
 #define ROS_ENTRY_BUFFER_S 256
 
+/** LOGGING FUNCTION */
+
 void 
 log_msg_prefix(const char *msg_prefix, const char *color, const char *open, const char *close, const char *format, ...);
 
-/** ANSI COLORS */
+/** ANSI COLORS UTILS*/
+
 #define ANSI_COLOR_RED       "\x1b[31m"
 #define ANSI_COLOR_GRAY      "\x1b[37m"
 #define ANSI_COLOR_GREEN     "\x1b[32m"
@@ -38,6 +40,8 @@ log_msg_prefix(const char *msg_prefix, const char *color, const char *open, cons
 #define LOG_ERROR_PREFIX(format, ...) log_msg_prefix("ERR", ANSI_COLOR_RED, "[", "] ", format, ##__VA_ARGS__)
 #define LOG_WARNING_PREFIX(format, ...) log_msg_prefix("WARN", ANSI_COLOR_PURPLE, "[", "] ", format, ##__VA_ARGS__)
 
+/** ENUMS */
+
 typedef enum device_t {
     ROUTER_T,
     SWITCH_T,
@@ -50,25 +54,24 @@ typedef enum net_types_s {
     BUS_NET_T,
 } net_types_e;
 
+typedef enum machine_status_e {
+    SUCCESS = 1,
+    FAILURE = 0
+} machine_status_t;
 
-/** Базовая инфоомация об устройсте. */
+/** Basic information about the device. */
 typedef struct dev_basic_info_s {
     device_e dev_type;
     char *dev_name;
 } dev_basic_info_t;
 
-/** Абстрактное устройство. */
+/** An abstract device. */
 typedef struct abs_dev_s {
     dev_basic_info_t basic_info;
 
     struct abs_dev_s *next;
     struct abs_dev_s *lower_devs_list;      
 } abs_dev_t;
-
-typedef enum machine_status_e {
-    SUCCESS = 1,
-    FAILURE = 0
-} machine_status_t;
 
 typedef struct adjacency_node_s {
     __uint8_t weight;    
@@ -94,20 +97,22 @@ typedef struct hops_matrix_cell_s {
     __uint32_t weight;  
 } hops_matrix_cell_t;
 
-/** Тип сетевой топологии. */
+/** Type of network topology. */
 typedef struct tinynet_conf_s {
     net_types_e net_type;
 
     char *net_name;
     char *net_description;
 
-    /** Порядок устройств в списке тут такой же, как и в списке смежности */
+    /** The order of the devices in the list is the same as in the adjacency list. */
     char_node_t **ros_tables_list;     
 
     net_graph_t *net_graph;
     hops_matrix_cell_t **hops_matrix;
 
 } tinynet_conf_t;
+
+/** PARSER */
 
 /** Network configuratin
  *  parser state machine states. */
@@ -153,8 +158,8 @@ typedef enum machine_states_e {
 
 /** parser state. */
 typedef struct parser_state_s {
-    char *net_conf_name;           /** Master network configuration name. */
-    char *net_conf_description;    /** Master network configuration description. */
+    char *net_conf_name;                     /** Master network configuration name. */
+    char *net_conf_description;              /** Master network configuration description. */
     net_types_e net_conf_type;               /** Master network configuration type. */
 
     machine_states_t state;                   /** The current parse state */
@@ -174,11 +179,37 @@ typedef struct parser_state_s {
 
 } parser_state_t;
 
+
+/** DUMP */
 void 
 dump_net_links(tinynet_conf_t *network, __int32_t enable_net_info);
 
 void
+dump_to_png();
+
+void 
+dump_shortest_hops(tinynet_conf_t *network);
+
+void 
+dump_ros_tables(tinynet_conf_t *network);
+
+
+/** DESTROY */
+
+void
 destroy_net_conf(tinynet_conf_t *network);
+
+void 
+destroy_parser_state(parser_state_t *state);
+
+void 
+destroy_wans_list(abs_dev_t *wans_list);
+
+void 
+destory_hops_matrix(tinynet_conf_t *net_conf);
+
+
+/** GRAPH UTILS */
 
 __int32_t 
 graph_by_config(tinynet_conf_t **network);
@@ -198,25 +229,9 @@ reconstruct_path(tinynet_conf_t *network, __int32_t iter, __int32_t jter);
 void 
 init_ros_tables(tinynet_conf_t *network);
 
-void
-dump_to_png();
-
-void 
-dump_shortest_hops(tinynet_conf_t *network);
-
-void 
-dump_ros_tables(tinynet_conf_t *network);
-
 void 
 add_to_ros_table(tinynet_conf_t *network, __int32_t iter, __int32_t jter, __int32_t kter);
 
-void 
-destroy_parser_state(parser_state_t *state);
 
-void 
-destory_hops_matrix(tinynet_conf_t *net_conf);
-
-void 
-destroy_wans_list(abs_dev_t *wans_list);
 
 #endif /** TINYNET_H */
