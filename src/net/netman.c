@@ -170,7 +170,7 @@ init_tinynet(tinynet_conf_t **network)
 {
     int err = graph_by_config(network);
     if (err != EXIT_SUCCESS) {
-        fprintf(stderr, "Failed to parse YAML file\n");
+        LOG_ERROR_PREFIX("Failed to parse YAML file\n");
         return err;
     }
 
@@ -210,8 +210,7 @@ netman_start(tinynet_conf_t **network)
 
     int rc = init_tinynet(network);
     if (rc != EXIT_SUCCESS) {
-        fprintf(stderr, "init_tinynet failed\n");
-        free(network);
+        LOG_ERROR_PREFIX("init_tinynet failed\n");
         return EXIT_FAILURE;
     }
 

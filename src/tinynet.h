@@ -36,6 +36,8 @@ log_msg_prefix(const char *msg_prefix, const char *color, const char *open, cons
 #define COLORFY_GREEN(string) ANSI_COLOR_GREEN string ANSI_COLOR_RESET
 #define COLORFY_PURPLE(string) ANSI_COLOR_PURPLE string ANSI_COLOR_RESET
 
+/** ERRORS */
+
 #define LOG_PANIC_PREFIX(format, ...) log_msg_prefix("PANIC", ANSI_COLOR_RED, "[", "] ", format, ##__VA_ARGS__)
 #define LOG_ERROR_PREFIX(format, ...) log_msg_prefix("ERR", ANSI_COLOR_RED, "[", "] ", format, ##__VA_ARGS__)
 #define LOG_WARNING_PREFIX(format, ...) log_msg_prefix("WARN", ANSI_COLOR_PURPLE, "[", "] ", format, ##__VA_ARGS__)

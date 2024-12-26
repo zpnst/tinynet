@@ -12,7 +12,7 @@ main(void)
 
     __int32_t ret = netman_start(&network);
     if (ret != EXIT_SUCCESS) {
-        panic("init_tinynet");
+        panic("init_tinynet\n");
     }
 
     return EXIT_SUCCESS;

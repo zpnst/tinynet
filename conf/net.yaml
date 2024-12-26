@@ -1,6 +1,6 @@
 ---
 tinynet:
-  net_type: "bus" # mesh, ring or bus
+  net_type: "nevernaya topologiya=)" # mesh, ring or bus
   net_name: "tinynet"
   net_description: "=)"
   wan_devs:
