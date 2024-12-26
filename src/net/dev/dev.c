@@ -108,7 +108,7 @@ forward_pdu(const tinynet_pdu_t *pdu)
     return EXIT_SUCCESS;
 }
 
-static route_entry_t* 
+static route_entry_t * 
 parse_routes(const char *routes_str)
 {
     if (!routes_str || !*routes_str) {
