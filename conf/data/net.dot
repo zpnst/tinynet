@@ -4,38 +4,16 @@ graph tinynet {
     labeljust=left;
     label=<
     <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
-        <TR><TD ALIGN="LEFT"><B>Topology</B>: Mesh</TD></TR>
+        <TR><TD ALIGN="LEFT"><B>Topology</B>: Bus</TD></TR>
         <TR><TD ALIGN="LEFT"><B>Name</B>: tinynet</TD></TR>
-        <TR><TD ALIGN="LEFT"><B>Description</B>: Hello tinynet! The best network mmodel</TD></TR>
+        <TR><TD ALIGN="LEFT"><B>Description</B>: =)</TD></TR>
     </TABLE>
     >;
     "router_1" [shape=diamond, color=purple, label="router_1"];
     "router_2" [shape=diamond, color=purple, label="router_2"];
     "router_3" [shape=diamond, color=purple, label="router_3"];
-    "switch_11" [shape=ellipse, color=blue, label="switch_11"];
-    "switch_21" [shape=ellipse, color=blue, label="switch_21"];
-    "switch_22" [shape=ellipse, color=blue, label="switch_22"];
-    "switch_31" [shape=ellipse, color=blue, label="switch_31"];
-    "host_111" [shape=box, color=black, label="host_111"];
-    "host_211" [shape=box, color=black, label="host_211"];
-    "host_221" [shape=box, color=black, label="host_221"];
-    "host_311" [shape=box, color=black, label="host_311"];
-    "host_312" [shape=box, color=black, label="host_312"];
-    "host_313" [shape=box, color=black, label="host_313"];
-    "host_314" [shape=box, color=black, label="host_314"];
-    "router_1" -- "router_2" [label="13"];
-    "router_1" -- "router_3" [label="44"];
-    "router_1" -- "switch_11" [label="67"];
-    "router_2" -- "router_3" [label="82"];
-    "router_2" -- "switch_21" [label="29"];
-    "router_2" -- "switch_22" [label="54"];
-    "router_3" -- "switch_31" [label="59"];
-    "switch_21" -- "switch_22" [label="6"];
-    "host_111" -- "switch_11" [label="90"];
-    "host_211" -- "switch_21" [label="99"];
-    "host_221" -- "switch_22" [label="38"];
-    "host_311" -- "switch_31" [label="38"];
-    "host_312" -- "switch_31" [label="57"];
-    "host_313" -- "switch_31" [label="30"];
-    "host_314" -- "switch_31" [label="85"];
+    "router_4" [shape=diamond, color=purple, label="router_4"];
+    "router_1" -- "router_2" [label="12"];
+    "router_2" -- "router_3" [label="55"];
+    "router_3" -- "router_4" [label="50"];
 }

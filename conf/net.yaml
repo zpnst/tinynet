@@ -1,31 +1,15 @@
 ---
 tinynet:
-  net_type: "mesh"
+  net_type: "bus" # mesh, ring or bus
   net_name: "tinynet"
-  net_description: "Hello tinynet! The best network model"
+  net_description: "=)"
   wan_devs:
     - router_name: "router_1"
-      router_lan_devs:
-        - switch_name: "switch_11"
-          switch_hosts:
-            - host_name: "host_111"
     - router_name: "router_2"
-      router_lan_devs:
-        - switch_name: "switch_21"
-          switch_hosts:
-            - host_name: "host_211"
-        - switch_name: "switch_22"
-          switch_hosts:
-            - host_name: "host_221"
     - router_name: "router_3"
-      router_lan_devs:
-        - switch_name: "switch_31"
-          switch_hosts:
-            - host_name: "host_311"
-            - host_name: "host_312"
-            - host_name: "host_313"
-            - host_name: "host_314"
+    - router_name: "router_4"
 ...
+
 
 
 
